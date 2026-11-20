@@ -1,0 +1,26 @@
+{
+  "model_name": "Random Forest",
+  "algorithm": "RandomForestClassifier",
+  "dataset_source": "backend/data/processed/freshtrack_cleaned.csv",
+  "features": [
+    "fruit",
+    "temperature_c",
+    "humidity_percent",
+    "light_lux",
+    "co2_ppm"
+  ],
+  "target": "quality",
+  "test_metrics": {
+    "accuracy": 0.9994,
+    "macro_f1": 0.9994,
+    "good_precision": 1.0,
+    "good_recall": 0.9989,
+    "good_f1": 0.9995
+  },
+  "supported_fruits": [
+    "Tomato",
+    "Orange",
+    "Banana"
+  ],
+  "version": "1.0.0"
+}

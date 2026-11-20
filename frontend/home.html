@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>FreshTrack - Food Freshness &amp; Spoilage Analysis</title>
+    <link rel="icon" type="image/svg+xml" href="assets/images/leaf-logo.svg">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --brand-green: #165B33;
+            --brand-emerald: #10B981;
+            --brand-mint-bg: #EDF7ED;
+            --brand-mint-light: #F4FBF6;
+            --text-heading: #1E293B;
+            --text-body: #334155;
+            --text-muted: #64748B;
+            --border-light: #E2E8F0;
+            --radius-pill: 9999px;
+            --radius-lg: 16px;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background-color: #FFFFFF !important;
+            color: #334155 !important;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Top Clean White Navbar */
+        .landing-header {
+            background: #FFFFFF !important;
+            border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .brand-logo-wrap {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none !important;
+        }
+
+        .brand-logo-text {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: #165B33 !important;
+            letter-spacing: -0.02em;
+        }
+
+        .nav-links-center .nav-link {
+            color: #475569 !important;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 8px 18px;
+            border-radius: var(--radius-pill);
+            transition: all 0.2s ease;
+            text-decoration: none !important;
+        }
+
+        .nav-links-center .nav-link:hover,
+        .nav-links-center .nav-link.active {
+            color: #165B33 !important;
+            background-color: #EDF7ED !important;
+            font-weight: 700;
+        }
+
+        /* Hero Section (Matching Reference Mockup Screen 1) */
+        .hero-section {
+            background: linear-gradient(145deg, #F5FCF7 0%, #EDF7ED 45%, #E3F5E7 100%) !important;
+            padding-top: 50px;
+            padding-bottom: 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-brand-name {
+            font-size: 3.2rem;
+            font-weight: 800;
+            color: #165B33 !important;
+            letter-spacing: -0.03em;
+            line-height: 1.1;
+            margin-bottom: 8px;
+        }
+
+        .hero-main-title {
+            font-size: 2.35rem;
+            font-weight: 700;
+            color: #1E293B !important;
+            line-height: 1.22;
+            letter-spacing: -0.02em;
+            margin-bottom: 18px;
+        }
+
+        .hero-subtitle {
+            font-size: 1.1rem;
+            color: #475569 !important;
+            line-height: 1.55;
+            max-width: 460px;
+            margin-bottom: 30px;
+        }
+
+        /* Hero Action Buttons */
+        .btn-start-hero {
+            background-color: #10B981 !important;
+            color: #FFFFFF !important;
+            font-weight: 700;
+            font-size: 0.98rem;
+            padding: 12px 28px;
+            border-radius: var(--radius-pill);
+            border: none;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none !important;
+            transition: all 0.2s ease;
+        }
+
+        .btn-start-hero:hover {
+            background-color: #059669 !important;
+            color: #FFFFFF !important;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
+        }
+
+        .btn-learn-hero {
+            color: #1E293B !important;
+            font-weight: 700;
+            font-size: 0.98rem;
+            padding: 12px 20px;
+            border-radius: var(--radius-pill);
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none !important;
+            transition: all 0.2s ease;
+        }
+
+        .btn-learn-hero i {
+            color: #10B981;
+            font-size: 1.15rem;
+        }
+
+        .btn-learn-hero:hover {
+            color: #165B33 !important;
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+
+        /* Hero Image Placement */
+        .hero-img-wrap {
+            position: relative;
+            text-align: right;
+            padding-right: 10px;
+        }
+
+        .hero-fruit-img {
+            max-width: 100%;
+            height: auto;
+            max-height: 420px;
+            border-radius: 20px;
+            box-shadow: 0 16px 40px rgba(22, 91, 51, 0.08);
+            object-fit: cover;
+            display: block;
+            margin-left: auto;
+        }
+
+        /* Smooth Organic Wave Divider */
+        .hero-wave-wrapper {
+            position: relative;
+            width: 100%;
+            line-height: 0;
+            margin-top: 30px;
+        }
+
+        .hero-wave-wrapper svg {
+            display: block;
+            width: 100%;
+            height: 75px;
+        }
+
+        /* 4 Quick Actions (Exact Mockup Match) */
+        .quick-actions-section {
+            background-color: #FFFFFF !important;
+            padding: 30px 0 24px;
+        }
+
+        .quick-action-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            text-decoration: none !important;
+            transition: all 0.25s ease;
+            padding: 10px;
+        }
+
+        .quick-action-item:hover {
+            transform: translateY(-4px);
+        }
+
+        .action-circle-badge {
+            width: 62px;
+            height: 62px;
+            border-radius: 50%;
+            background-color: #EDF7ED;
+            border: 1.5px solid #C6F0D5;
+            color: #165B33;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.55rem;
+            margin-bottom: 12px;
+            transition: all 0.25s ease;
+        }
+
+        .quick-action-item:hover .action-circle-badge {
+            background-color: #10B981;
+            color: #FFFFFF;
+            border-color: #10B981;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.32);
+        }
+
+        .action-label-text {
+            font-size: 0.96rem;
+            font-weight: 700;
+            color: #1E293B !important;
+            line-height: 1.3;
+        }
+
+        /* Supported Fruits Section (Exact Mockup Match) */
+        .supported-fruits-section {
+            background-color: #FFFFFF !important;
+            padding: 24px 0 50px;
+        }
+
+        .supported-heading {
+            font-size: 1.45rem;
+            font-weight: 800;
+            color: #1E293B !important;
+            text-align: center;
+            margin-bottom: 26px;
+            letter-spacing: -0.01em;
+        }
+
+        .fruit-card-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: #FFFFFF !important;
+            border: 1px solid #E2E8F0;
+            border-radius: 16px;
+            padding: 14px 16px 16px;
+            text-decoration: none !important;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03);
+            transition: all 0.25s ease;
+            height: 100%;
+        }
+
+        .fruit-card-item:hover {
+            transform: translateY(-4px);
+            border-color: #10B981;
+            box-shadow: 0 10px 24px rgba(16, 185, 129, 0.12);
+        }
+
+        .fruit-card-img-box {
+            width: 100%;
+            height: 80px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 10px;
+            border-radius: 10px;
+            overflow: hidden;
+            background-color: #F8FAFC;
+        }
+
+        .fruit-card-img-box img {
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            transition: transform 0.25s ease;
+        }
+
+        .fruit-card-item:hover .fruit-card-img-box img {
+            transform: scale(1.08);
+        }
+
+        .fruit-card-name {
+            font-size: 1rem;
+            font-weight: 700;
+            color: #1E293B !important;
+        }
+
+        /* Methodology & Academic Architecture */
+        .academic-section {
+            background-color: #F8FAFC !important;
+            border-top: 1px solid var(--border-light);
+            border-bottom: 1px solid var(--border-light);
+            padding: 60px 0;
+        }
+
+        .stat-card-clean {
+            background: #FFFFFF !important;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 18px;
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+        }
+
+        .stat-val-bold {
+            font-size: 1.85rem;
+            font-weight: 800;
+            letter-spacing: -0.02em;
+        }
+
+        /* Clean Footer */
+        .clean-footer {
+            background-color: #FFFFFF !important;
+            border-top: 1px solid var(--border-light);
+            padding: 28px 0;
+        }
+
+        @media (max-width: 991px) {
+            .hero-brand-name { font-size: 2.4rem; }
+            .hero-main-title { font-size: 1.8rem; }
+            .hero-fruit-img { margin: 20px auto 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Top Clean Navbar -->
+    <header class="landing-header">
+        <div class="container py-3 d-flex justify-content-between align-items-center">
+            <a href="home.html" class="brand-logo-wrap">
+                <img src="assets/images/leaf-logo.svg" alt="FreshTrack Leaf Logo" width="36" height="36">
+                <span class="brand-logo-text">FreshTrack</span>
+            </a>
+
+            <nav class="nav nav-links-center d-none d-md-flex align-items-center gap-1">
+                <a class="nav-link active" href="home.html">Home</a>
+                <a class="nav-link" href="pages/dashboard.html">Dashboard</a>
+                <a class="nav-link" href="pages/analyzer.html">Analyzer</a>
+                <a class="nav-link" href="pages/analytics.html">Analytics</a>
+                <a class="nav-link" href="pages/comparison.html">Comparison</a>
+                <a class="nav-link" href="#aboutStory">About</a>
+            </nav>
+
+            <div class="d-flex align-items-center gap-2">
+                <a href="pages/analyzer.html" class="btn-start-hero py-2 px-3 fs-6 d-none d-sm-inline-flex">
+                    <span>Analyzer Studio</span>
+                    <i class="bi bi-arrow-right"></i>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section (Matches Mockup Screen 1) -->
+    <section class="hero-section">
+        <div class="container">
+            <div class="row align-items-center g-4">
+                <!-- Left Column: Title & CTA -->
+                <div class="col-lg-6">
+                    <h1 class="hero-brand-name">FreshTrack</h1>
+                    <h2 class="hero-main-title">
+                        Food Freshness &amp;<br>Spoilage Analysis
+                    </h2>
+                    <p class="hero-subtitle">
+                        Smart analytics for longer-lasting,<br>higher quality fruits.
+                    </p>
+
+                    <div class="d-flex flex-wrap align-items-center gap-3">
+                        <a href="pages/analyzer.html" class="btn-start-hero">
+                            <span>Start Analysis</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                        <a href="#aboutStory" class="btn-learn-hero">
+                            <i class="bi bi-play-circle-fill"></i>
+                            <span>Learn More</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Right Column: Fruit Image (Tomato, Banana, Orange Composition) -->
+                <div class="col-lg-6">
+                    <div class="hero-img-wrap">
+                        <img src="assets/images/fruit-hero.jpg" alt="Tomato, Banana and Orange Freshness Analysis" class="hero-fruit-img">
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Smooth Organic Wave Divider -->
+        <div class="hero-wave-wrapper">
+            <svg viewBox="0 0 1440 90" fill="none" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+                <path d="M0,35 C320,85 700,10 1060,55 C1240,78 1380,45 1440,30 L1440,90 L0,90 Z" fill="#FFFFFF"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- 4 Quick Actions (Exact Mockup Match) -->
+    <section class="quick-actions-section">
+        <div class="container">
+            <div class="row justify-content-center g-3 g-md-4">
+                <div class="col-6 col-md-3">
+                    <a href="pages/analyzer.html" class="quick-action-item">
+                        <div class="action-circle-badge">
+                            <i class="bi bi-shield-check"></i>
+                        </div>
+                        <div class="action-label-text">
+                            Analyze<br>Fruit Quality
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <a href="pages/dashboard.html" class="quick-action-item">
+                        <div class="action-circle-badge">
+                            <i class="bi bi-bar-chart-fill"></i>
+                        </div>
+                        <div class="action-label-text">
+                            Visualize<br>Insights
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <a href="pages/comparison.html" class="quick-action-item">
+                        <div class="action-circle-badge">
+                            <i class="bi bi-arrow-left-right"></i>
+                        </div>
+                        <div class="action-label-text">
+                            Compare<br>Fruits
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <a href="pages/reports.html" class="quick-action-item">
+                        <div class="action-circle-badge">
+                            <i class="bi bi-file-earmark-arrow-down-fill"></i>
+                        </div>
+                        <div class="action-label-text">
+                            Download<br>Reports
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Supported Fruits (Exact Mockup Match) -->
+    <section class="supported-fruits-section">
+        <div class="container">
+            <h3 class="supported-heading">Supported Fruits</h3>
+            <div class="row justify-content-center g-3 g-md-4">
+                <!-- Tomato Card -->
+                <div class="col-4 col-sm-3 col-md-2">
+                    <a href="pages/analyzer.html?fruit=Tomato" class="fruit-card-item">
+                        <div class="fruit-card-img-box">
+                            <img src="assets/images/card-tomato.jpg" alt="Tomato Freshness">
+                        </div>
+                        <span class="fruit-card-name">Tomato</span>
+                    </a>
+                </div>
+
+                <!-- Banana Card -->
+                <div class="col-4 col-sm-3 col-md-2">
+                    <a href="pages/analyzer.html?fruit=Banana" class="fruit-card-item">
+                        <div class="fruit-card-img-box">
+                            <img src="assets/images/card-banana.jpg" alt="Banana Freshness">
+                        </div>
+                        <span class="fruit-card-name">Banana</span>
+                    </a>
+                </div>
+
+                <!-- Orange Card -->
+                <div class="col-4 col-sm-3 col-md-2">
+                    <a href="pages/analyzer.html?fruit=Orange" class="fruit-card-item">
+                        <div class="fruit-card-img-box">
+                            <img src="assets/images/card-orange.jpg" alt="Orange Freshness">
+                        </div>
+                        <span class="fruit-card-name">Orange</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Project Methodology & Evaluator Section -->
+    <section class="academic-section" id="aboutStory">
+        <div class="container">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <span class="badge bg-success-subtle text-success px-3 py-1 rounded-pill mb-2 fw-bold">Post-Harvest AI Science</span>
+                    <h3 class="fw-bold text-dark mb-3">Why Traditional Visual Inspection Fails</h3>
+                    <p class="text-secondary mb-3">
+                        Manual visual inspection detects produce rot only after irreversible cellular decay and mold penetration have already taken place. In standard cold chain warehouses, this delayed diagnosis causes up to 30% of total fresh produce loss.
+                    </p>
+                    <p class="text-secondary mb-4">
+                        FreshTrack solves this by evaluating 4 non-destructive climate indicators: <strong>Temperature</strong>, <strong>Relative Humidity</strong>, <strong>Lighting Illuminance</strong>, and <strong>Carbon Dioxide</strong> through an ensemble Random Forest machine learning pipeline (100 Decision Trees).
+                    </p>
+
+                    <div class="row g-3 text-center">
+                        <div class="col-4">
+                            <div class="stat-card-clean">
+                                <div class="stat-val-bold text-success">99.94%</div>
+                                <div class="small text-secondary fw-semibold">Model Accuracy</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-card-clean">
+                                <div class="stat-val-bold text-primary">8,738</div>
+                                <div class="small text-secondary fw-semibold">Clean Records</div>
+                            </div>
+                        </div>
+                        <div class="col-4">
+                            <div class="stat-card-clean">
+                                <div class="stat-val-bold text-warning">4 Factors</div>
+                                <div class="small text-secondary fw-semibold">Sensor Metrics</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="p-4 rounded-4" style="background: linear-gradient(135deg, #ECFDF5 0%, #D1FAE5 100%); border: 1px solid #A7F3D0;">
+                        <h5 class="fw-bold text-dark mb-3"><i class="bi bi-mortarboard-fill text-success me-2"></i>How College Evaluators Can Test This:</h5>
+                        
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <span class="badge bg-success rounded-circle p-2 px-3 fw-bold">1</span>
+                            <div>
+                                <strong class="text-dark d-block">Launch Analyzer:</strong>
+                                <span class="small text-secondary">Pick Tomato, Orange, or Banana.</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-start gap-3 mb-3">
+                            <span class="badge bg-success rounded-circle p-2 px-3 fw-bold">2</span>
+                            <div>
+                                <strong class="text-dark d-block">Two Testing Modes:</strong>
+                                <span class="small text-secondary">Use <em>Option A</em> to load genuine records from our 8,738 CSV dataset with zero hardware, or <em>Option B</em> to slide custom values.</span>
+                            </div>
+                        </div>
+
+                        <div class="d-flex align-items-start gap-3 mb-4">
+                            <span class="badge bg-success rounded-circle p-2 px-3 fw-bold">3</span>
+                            <div>
+                                <strong class="text-dark d-block">Instant Audit PDF:</strong>
+                                <span class="small text-secondary">Click <em>Analyze Now</em> to see the Green Check or Red Alert, and download the official PDF Certificate!</span>
+                            </div>
+                        </div>
+
+                        <a href="pages/analyzer.html" class="btn-start-hero w-100 py-3 text-center justify-content-center">
+                            <span>Open Analyzer Studio</span>
+                            <i class="bi bi-arrow-right"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="clean-footer">
+        <div class="container d-flex flex-wrap justify-content-between align-items-center">
+            <div class="d-flex align-items-center gap-2">
+                <img src="assets/images/leaf-logo.svg" alt="FreshTrack" width="24" height="24">
+                <span class="fw-bold text-dark">FreshTrack</span>
+                <span class="text-muted small">&bull; Fruit Quality &amp; Storage Intelligence Platform</span>
+            </div>
+            <div class="d-flex gap-3 small">
+                <a href="pages/dashboard.html" class="text-secondary text-decoration-none">Dashboard</a>
+                <a href="pages/analyzer.html" class="text-secondary text-decoration-none">Analyzer</a>
+                <a href="pages/analytics.html" class="text-secondary text-decoration-none">Analytics</a>
+                <a href="pages/comparison.html" class="text-secondary text-decoration-none">Comparison</a>
+                <a href="#aboutStory" class="text-secondary text-decoration-none">About</a>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

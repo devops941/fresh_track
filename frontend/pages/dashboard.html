@@ -1,0 +1,655 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshTrack - Dashboard Overview</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/images/leaf-logo.svg">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-page: #FFFFFF;
+            --bg-viewport: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --bg-sidebar: #064E3B;
+            --bg-sidebar-active: #10B981;
+            --primary: #10B981;
+            --text-heading: #0F172A;
+            --text-body: #334155;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --radius-pill: 9999px;
+            --shadow-card: 0 4px 15px rgba(0, 0, 0, 0.04);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #FFFFFF !important;
+            color: #334155 !important;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-container { display: flex; min-height: 100vh; background-color: #FFFFFF; }
+
+        /* Sidebar */
+        .sidebar-panel {
+            width: 250px;
+            background-color: #064E3B !important;
+            color: #FFFFFF !important;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px 16px;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(6, 78, 59, 0.1);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none !important;
+            color: #FFFFFF !important;
+            font-weight: 800;
+            font-size: 1.35rem;
+            padding: 0 10px 22px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .sidebar-nav-list {
+            list-style: none !important;
+            padding: 18px 0 0 !important;
+            margin: 0 !important;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 18px;
+            border-radius: var(--radius-pill);
+            color: #D1FAE5 !important;
+            text-decoration: none !important;
+            font-weight: 600;
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-nav-link i { font-size: 1.15rem; width: 20px; text-align: center; }
+
+        .sidebar-nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #FFFFFF !important;
+        }
+
+        .sidebar-nav-link.active {
+            background-color: #10B981 !important;
+            color: #064E3B !important;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+        }
+
+        .sidebar-footer-card {
+            background-color: #043825;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            text-align: center;
+        }
+
+        .sidebar-footer-card .tag-title { color: #34D399; font-size: 0.84rem; font-weight: 700; margin-bottom: 2px; }
+        .sidebar-footer-card .tag-sub { color: #A7F3D0; font-size: 0.72rem; }
+
+        /* Main Viewport */
+        .main-viewport {
+            margin-left: 250px;
+            flex: 1;
+            padding: 32px 40px 60px;
+            background-color: #F8FAFC !important;
+            min-height: 100vh;
+        }
+
+        .viewport-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .page-title { font-size: 1.7rem; font-weight: 800; color: #0F172A !important; margin: 0 0 4px; letter-spacing: -0.02em; }
+        .page-sub { font-size: 0.88rem; color: #64748B !important; margin: 0; }
+
+        .auditor-profile-chip {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-pill);
+            padding: 6px 16px 6px 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .auditor-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background-color: #E2E8F0;
+            color: #334155;
+            font-weight: 700;
+            font-size: 0.82rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* SaaS White Cards */
+        .saas-card {
+            background-color: #FFFFFF !important;
+            border: 1px solid #E2E8F0 !important;
+            border-radius: var(--radius-lg);
+            padding: 26px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+            height: 100%;
+        }
+
+        .saas-card-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0F172A !important;
+            margin: 0 0 18px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        /* Metric Box */
+        .kpi-metric-box {
+            background: #FFFFFF !important;
+            border: 1px solid #E2E8F0 !important;
+            border-radius: var(--radius-lg);
+            padding: 22px 24px;
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            box-shadow: var(--shadow-card);
+        }
+
+        .kpi-icon-square {
+            width: 52px;
+            height: 52px;
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .icon-theme-green { background-color: #ECFDF5; color: #10B981; }
+        .icon-theme-emerald { background-color: #F0FDF4; color: #16A34A; }
+        .icon-theme-orange { background-color: #FFF7ED; color: #F97316; }
+        .icon-theme-amber { background-color: #FEFCE8; color: #CA8A04; }
+
+        .kpi-val-number {
+            font-size: 1.65rem;
+            font-weight: 800;
+            color: #0F172A !important;
+            line-height: 1.1;
+            margin-bottom: 4px;
+            letter-spacing: -0.02em;
+        }
+
+        .kpi-val-label { font-size: 0.84rem; font-weight: 600; color: #64748B !important; }
+
+        /* Donut Chart Display */
+        .donut-chart-holder { position: relative; display: flex; align-items: center; justify-content: center; }
+        .donut-center-badge { position: absolute; text-align: center; pointer-events: none; }
+        .donut-number-bold { font-size: 1.9rem; font-weight: 900; color: #0F172A !important; line-height: 1; letter-spacing: -0.02em; }
+        .donut-label-sub { font-size: 0.82rem; font-weight: 700; color: #10B981; margin-top: 4px; }
+
+        /* Insight Callout */
+        .callout-insight-box {
+            background-color: #FEF9C3 !important;
+            border: 1px solid #FDE047 !important;
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .callout-insight-box.theme-green { background-color: #F0FDF4 !important; border-color: #BBF7D0 !important; }
+        .callout-insight-icon { font-size: 1.35rem; color: #CA8A04; flex-shrink: 0; margin-top: 1px; }
+        .callout-insight-box.theme-green .callout-insight-icon { color: #16A34A; }
+
+        /* Activity Items */
+        .activity-stream { list-style: none !important; padding: 0 !important; margin: 0 !important; }
+        .activity-stream-item { display: flex; align-items: center; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #F1F5F9; }
+        .activity-stream-item:last-child { border-bottom: none; }
+        .activity-stream-item .activity-icon { font-size: 1.15rem; margin-right: 12px; }
+
+        /* Buttons */
+        .btn-emerald {
+            background-color: #10B981 !important;
+            color: #FFFFFF !important;
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 11px 22px;
+            border-radius: var(--radius-pill);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none !important;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-emerald:hover { background-color: #059669 !important; }
+
+        .btn-ghost-clean {
+            background-color: #FFFFFF !important;
+            color: #334155 !important;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 10px 20px;
+            border-radius: var(--radius-pill);
+            border: 1px solid #CBD5E1 !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none !important;
+        }
+
+        @media (max-width: 991px) {
+            .sidebar-panel { width: 100%; position: relative; height: auto; }
+            .main-viewport { margin-left: 0; padding: 24px 16px; }
+            .app-container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sleek Dark Forest Green Sidebar -->
+        <aside class="sidebar-panel">
+            <div>
+                <a class="sidebar-header" href="../home.html">
+                    <img src="../assets/images/leaf-logo.svg" alt="FreshTrack" width="28" height="28">
+                    <span>FreshTrack</span>
+                </a>
+
+                <ul class="sidebar-nav-list">
+                    <li>
+                        <a href="dashboard.html" class="sidebar-nav-link active">
+                            <i class="bi bi-grid-fill"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analyzer.html" class="sidebar-nav-link">
+                            <i class="bi bi-sliders"></i>
+                            <span>Analyzer</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analytics.html" class="sidebar-nav-link">
+                            <i class="bi bi-bar-chart-line-fill"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="comparison.html" class="sidebar-nav-link">
+                            <i class="bi bi-arrow-left-right"></i>
+                            <span>Comparison</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="history.html" class="sidebar-nav-link">
+                            <i class="bi bi-clock-history"></i>
+                            <span>History</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="reports.html" class="sidebar-nav-link">
+                            <i class="bi bi-file-earmark-text-fill"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="../home.html#aboutStory" class="sidebar-nav-link">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <span>About</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-footer-card">
+                <div class="tag-title">Smarter Food</div>
+                <div class="tag-sub">Brighter Future</div>
+            </div>
+        </aside>
+
+        <!-- Main Viewport -->
+        <main class="main-viewport">
+            <!-- Topbar Header -->
+            <div class="viewport-topbar">
+                <div>
+                    <h1 class="page-title">Dashboard</h1>
+                    <p class="page-sub">Overview of your fruit quality analysis and storage conditions</p>
+                </div>
+
+                <div class="auditor-profile-chip">
+                    <div class="auditor-avatar">QA</div>
+                    <div class="d-none d-sm-block text-start">
+                        <div class="fw-bold text-dark" style="font-size: 0.84rem; line-height: 1.1;">Quality Auditor</div>
+                        <div class="text-secondary" style="font-size: 0.72rem;">Inspector #104</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 1: KPI Stat Cards (Matches Mockup Screen 2) -->
+            <div class="row g-4 mb-4">
+                <div class="col-sm-6 col-xl-3">
+                    <div class="kpi-metric-box">
+                        <div class="kpi-icon-square icon-theme-green">
+                            <i class="bi bi-flower1"></i>
+                        </div>
+                        <div>
+                            <div class="kpi-val-number" id="dashTotalCount">8,738</div>
+                            <div class="kpi-val-label">Total Analyses</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="kpi-metric-box">
+                        <div class="kpi-icon-square icon-theme-emerald">
+                            <i class="bi bi-check2-circle"></i>
+                        </div>
+                        <div>
+                            <div class="kpi-val-number text-success" id="dashGoodPct">52.1%</div>
+                            <div class="kpi-val-label" id="dashGoodCount">4,553 Good Quality</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="kpi-metric-box">
+                        <div class="kpi-icon-square icon-theme-orange">
+                            <i class="bi bi-exclamation-triangle"></i>
+                        </div>
+                        <div>
+                            <div class="kpi-val-number text-danger" id="dashBadPct">47.9%</div>
+                            <div class="kpi-val-label" id="dashBadCount">4,185 Bad Quality</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-sm-6 col-xl-3">
+                    <div class="kpi-metric-box">
+                        <div class="kpi-icon-square icon-theme-amber">
+                            <i class="bi bi-basket2-fill"></i>
+                        </div>
+                        <div>
+                            <div class="kpi-val-number text-primary" id="dashFruitsCount">3</div>
+                            <div class="kpi-val-label">Fruits Analyzed</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 2: Charts (Matches Mockup Screen 2) -->
+            <div class="row g-4 mb-4">
+                <!-- Quality Distribution Donut -->
+                <div class="col-lg-5">
+                    <div class="saas-card">
+                        <div class="saas-card-title">
+                            <span>Quality Distribution</span>
+                            <span class="badge bg-light text-secondary border">Overall</span>
+                        </div>
+
+                        <div class="donut-chart-holder" style="height: 250px;">
+                            <canvas id="qualityDonutChart"></canvas>
+                            <div class="donut-center-badge">
+                                <div class="donut-number-bold text-success" id="donutCenterPct">52.1%</div>
+                                <div class="donut-label-sub">Good Quality</div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-center gap-4 mt-3 small fw-bold">
+                            <div><span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background: #10B981;"></span> Good Quality</div>
+                            <div><span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background: #F97316;"></span> Bad Quality</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fruit-wise Analysis Bar Chart -->
+                <div class="col-lg-7">
+                    <div class="saas-card">
+                        <div class="saas-card-title">
+                            <span>Fruit-wise Analysis</span>
+                            <div class="d-flex gap-2">
+                                <span class="badge bg-success-subtle text-success">Good</span>
+                                <span class="badge bg-warning-subtle text-danger">Bad</span>
+                            </div>
+                        </div>
+
+                        <div style="height: 270px;">
+                            <canvas id="fruitWiseBarChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Row 3: Recent Activity & Insight Card (Matches Mockup Screen 2) -->
+            <div class="row g-4">
+                <!-- Recent Activity List -->
+                <div class="col-lg-6">
+                    <div class="saas-card">
+                        <div class="saas-card-title">
+                            <span>Recent Activity</span>
+                            <a href="history.html" class="small text-success fw-bold">View History &rarr;</a>
+                        </div>
+
+                        <ul class="activity-stream">
+                            <li class="activity-stream-item">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success activity-icon"></i>
+                                    <div>
+                                        <strong class="text-dark">Tomato analyzed</strong> - <span class="text-success fw-bold">Good Quality</span>
+                                        <div class="text-muted" style="font-size: 0.74rem;">Temp: 23°C, Humid: 85%, Light: 10 Lux</div>
+                                    </div>
+                                </div>
+                                <span class="text-secondary small">2 min ago</span>
+                            </li>
+                            <li class="activity-stream-item">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-exclamation-triangle-fill text-danger activity-icon"></i>
+                                    <div>
+                                        <strong class="text-dark">Banana analyzed</strong> - <span class="text-danger fw-bold">Bad Quality</span>
+                                        <div class="text-muted" style="font-size: 0.74rem;">Temp: 28°C, CO₂: 410 ppm (Decay Spike)</div>
+                                    </div>
+                                </div>
+                                <span class="text-secondary small">5 min ago</span>
+                            </li>
+                            <li class="activity-stream-item">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success activity-icon"></i>
+                                    <div>
+                                        <strong class="text-dark">Orange analyzed</strong> - <span class="text-success fw-bold">Good Quality</span>
+                                        <div class="text-muted" style="font-size: 0.74rem;">Temp: 21°C, Humid: 88% (Optimal Chilled)</div>
+                                    </div>
+                                </div>
+                                <span class="text-secondary small">8 min ago</span>
+                            </li>
+                            <li class="activity-stream-item">
+                                <div class="d-flex align-items-center">
+                                    <i class="bi bi-check-circle-fill text-success activity-icon"></i>
+                                    <div>
+                                        <strong class="text-dark">Tomato analyzed</strong> - <span class="text-success fw-bold">Good Quality</span>
+                                        <div class="text-muted" style="font-size: 0.74rem;">Temp: 22°C, Light: 15 Lux (Protected)</div>
+                                    </div>
+                                </div>
+                                <span class="text-secondary small">14 min ago</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- FreshTrack Insight -->
+                <div class="col-lg-6">
+                    <div class="saas-card d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="saas-card-title">
+                                <span>FreshTrack Insight</span>
+                                <span class="badge bg-success-subtle text-success">AI Storage Rule</span>
+                            </div>
+
+                            <div class="callout-insight-box theme-green mb-3">
+                                <i class="bi bi-lightbulb-fill callout-insight-icon"></i>
+                                <div>
+                                    <strong class="text-dark d-block mb-1">Cold Storage Recommendation:</strong>
+                                    <span class="small text-secondary">Keep temperature between <strong>10°C - 25°C</strong> and relative humidity around <strong>70% - 90%</strong> for better freshness.</span>
+                                </div>
+                            </div>
+
+                            <div class="callout-insight-box">
+                                <i class="bi bi-sun-fill callout-insight-icon"></i>
+                                <div>
+                                    <strong class="text-dark d-block mb-1">Light Sensitivity Fact (Tomato):</strong>
+                                    <span class="small text-secondary">Storage illumination exceeding <strong>25 Lux</strong> accelerates chlorophyll photolysis, softening the skin and causing rapid rot.</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-4 pt-3 border-top">
+                            <a href="analyzer.html" class="btn-emerald flex-fill text-center justify-content-center py-2">
+                                <span>Analyze New Produce</span>
+                                <i class="bi bi-arrow-right"></i>
+                            </a>
+                            <a href="analytics.html" class="btn-ghost-clean flex-fill text-center justify-content-center py-2">
+                                <span>View Trends</span>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap & Chart.js scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script>
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Render Donut Chart
+            const ctxDonut = document.getElementById("qualityDonutChart").getContext("2d");
+            const donutChart = new Chart(ctxDonut, {
+                type: "doughnut",
+                data: {
+                    labels: ["Good Quality", "Bad Quality"],
+                    datasets: [{
+                        data: [52.1, 47.9],
+                        backgroundColor: ["#10B981", "#F97316"],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "75%",
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Render Fruit-wise Bar Chart
+            const ctxBar = document.getElementById("fruitWiseBarChart").getContext("2d");
+            const barChart = new Chart(ctxBar, {
+                type: "bar",
+                data: {
+                    labels: ["Tomato", "Banana", "Orange"],
+                    datasets: [
+                        {
+                            label: "Good Quality %",
+                            data: [62, 56, 52],
+                            backgroundColor: "#10B981",
+                            borderRadius: 6
+                        },
+                        {
+                            label: "Bad Quality %",
+                            data: [38, 44, 48],
+                            backgroundColor: "#F97316",
+                            borderRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: v => v + "%" },
+                            grid: { color: "#F1F5F9" }
+                        },
+                        x: { grid: { display: false } }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // Fetch live API data
+            try {
+                const summary = await window.apiClient.getDatasetSummary();
+                if (summary) {
+                    document.getElementById("dashTotalCount").textContent = summary.total_records.toLocaleString();
+                    document.getElementById("dashGoodPct").textContent = `${summary.good_ratio}%`;
+                    document.getElementById("dashGoodCount").textContent = `${summary.good_count.toLocaleString()} Good Quality`;
+                    document.getElementById("dashBadPct").textContent = `${summary.bad_ratio}%`;
+                    document.getElementById("dashBadCount").textContent = `${summary.bad_count.toLocaleString()} Bad Quality`;
+                    document.getElementById("donutCenterPct").textContent = `${summary.good_ratio}%`;
+
+                    donutChart.data.datasets[0].data = [summary.good_ratio, summary.bad_ratio];
+                    donutChart.update();
+                }
+
+                const fruits = await window.apiClient.getFruitAnalysis();
+                if (fruits && fruits.breakdown) {
+                    const b = fruits.breakdown;
+                    const labels = Object.keys(b);
+                    const goods = labels.map(f => b[f].good_ratio || 50);
+                    const bads = labels.map(f => b[f].bad_ratio || 50);
+
+                    barChart.data.labels = labels;
+                    barChart.data.datasets[0].data = goods;
+                    barChart.data.datasets[1].data = bads;
+                    barChart.update();
+                }
+            } catch (e) {
+                console.warn("Backend data fetch:", e);
+            }
+        });
+    </script>
+</body>
+</html>

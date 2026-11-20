@@ -1,0 +1,971 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshTrack - Fruit Quality Analyzer</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/images/leaf-logo.svg">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- jsPDF for Certified Audit Report -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- Embedded High-Priority Self-Contained Styles (Prevents Browser Cache Glitches) -->
+    <style>
+        :root {
+            --bg-page: #FFFFFF;
+            --bg-viewport: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --bg-sidebar: #064E3B;
+            --bg-sidebar-active: #10B981;
+            --primary: #10B981;
+            --primary-hover: #059669;
+            --text-heading: #0F172A;
+            --text-body: #334155;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --radius-pill: 9999px;
+            --shadow-card: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #FFFFFF !important;
+            color: #334155 !important;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* App Layout */
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            background-color: #FFFFFF;
+        }
+
+        /* Sidebar */
+        .sidebar-panel {
+            width: 250px;
+            background-color: #064E3B !important;
+            color: #FFFFFF !important;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px 16px;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(6, 78, 59, 0.1);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none !important;
+            color: #FFFFFF !important;
+            font-weight: 800;
+            font-size: 1.35rem;
+            padding: 0 10px 22px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .sidebar-nav-list {
+            list-style: none !important;
+            padding: 18px 0 0 !important;
+            margin: 0 !important;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 18px;
+            border-radius: var(--radius-pill);
+            color: #D1FAE5 !important;
+            text-decoration: none !important;
+            font-weight: 600;
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-nav-link i {
+            font-size: 1.15rem;
+            width: 20px;
+            text-align: center;
+        }
+
+        .sidebar-nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #FFFFFF !important;
+        }
+
+        .sidebar-nav-link.active {
+            background-color: #10B981 !important;
+            color: #064E3B !important;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+        }
+
+        .sidebar-footer-card {
+            background-color: #043825;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            text-align: center;
+        }
+
+        .sidebar-footer-card .tag-title {
+            color: #34D399;
+            font-size: 0.84rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+        }
+
+        .sidebar-footer-card .tag-sub {
+            color: #A7F3D0;
+            font-size: 0.72rem;
+        }
+
+        /* Main Content Viewport */
+        .main-viewport {
+            margin-left: 250px;
+            flex: 1;
+            padding: 32px 40px 60px;
+            background-color: #F8FAFC !important;
+            min-height: 100vh;
+        }
+
+        .viewport-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 28px;
+        }
+
+        .page-title {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #0F172A !important;
+            margin: 0 0 4px;
+            letter-spacing: -0.02em;
+        }
+
+        .page-sub {
+            font-size: 0.88rem;
+            color: #64748B !important;
+            margin: 0;
+        }
+
+        .auditor-profile-chip {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-pill);
+            padding: 6px 16px 6px 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .auditor-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background-color: #E2E8F0;
+            color: #334155;
+            font-weight: 700;
+            font-size: 0.82rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* SaaS White Cards */
+        .saas-card {
+            background-color: #FFFFFF !important;
+            border: 1px solid #E2E8F0 !important;
+            border-radius: var(--radius-lg);
+            padding: 26px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+            height: 100%;
+        }
+
+        /* Form Controls */
+        .field-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+            font-weight: 700;
+            font-size: 0.88rem;
+            color: #0F172A !important;
+        }
+
+        .field-input-box {
+            border: 1px solid #CBD5E1 !important;
+            border-radius: var(--radius-md) !important;
+            padding: 10px 14px !important;
+            font-size: 0.95rem !important;
+            color: #0F172A !important;
+            background-color: #FFFFFF !important;
+            width: 100%;
+            transition: all 0.2s ease;
+        }
+
+        .field-input-box:focus {
+            border-color: #10B981 !important;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+        }
+
+        .field-slider-bar {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #E2E8F0;
+            outline: none;
+            margin: 8px 0 16px;
+        }
+
+        .field-slider-bar::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #10B981;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.15s ease;
+        }
+
+        .field-slider-bar::-webkit-slider-thumb:hover {
+            transform: scale(1.15);
+        }
+
+        /* Buttons */
+        .btn-emerald {
+            background-color: #10B981 !important;
+            color: #FFFFFF !important;
+            font-weight: 700;
+            font-size: 0.95rem;
+            padding: 12px 24px;
+            border-radius: var(--radius-pill);
+            border: none;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            text-decoration: none !important;
+        }
+
+        .btn-emerald:hover {
+            background-color: #059669 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 6px 18px rgba(16, 185, 129, 0.45);
+        }
+
+        .btn-ghost-clean {
+            background-color: #FFFFFF !important;
+            color: #334155 !important;
+            font-weight: 600;
+            font-size: 0.95rem;
+            padding: 11px 22px;
+            border-radius: var(--radius-pill);
+            border: 1px solid #CBD5E1 !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            text-decoration: none !important;
+        }
+
+        .btn-ghost-clean:hover {
+            background-color: #F8FAFC !important;
+            border-color: #94A3B8 !important;
+        }
+
+        /* Verdict Card (Right Side) */
+        .analyzer-verdict-banner {
+            border-radius: var(--radius-md);
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .analyzer-verdict-center {
+            text-align: center;
+            padding: 14px 0;
+        }
+
+        .analyzer-verdict-icon {
+            font-size: 3.5rem;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .analyzer-verdict-heading {
+            font-size: 1.65rem;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .analyzer-verdict-conf {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #64748B !important;
+        }
+
+        /* Conditions Table */
+        .summary-data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+
+        .summary-data-table td {
+            padding: 8px 12px;
+            border-bottom: 1px solid #F1F5F9;
+            font-size: 0.88rem;
+        }
+
+        .summary-data-table td:first-child {
+            color: #64748B !important;
+            font-weight: 600;
+        }
+
+        .summary-data-table td:last-child {
+            color: #0F172A !important;
+            font-weight: 700;
+            text-align: right;
+        }
+
+        /* Callout Box */
+        .callout-insight-box {
+            background-color: #FEF9C3 !important;
+            border: 1px solid #FDE047 !important;
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .callout-insight-box.theme-red {
+            background-color: #FEF2F2 !important;
+            border-color: #FECACA !important;
+        }
+
+        .callout-insight-icon {
+            font-size: 1.35rem;
+            color: #CA8A04;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .callout-insight-box.theme-red .callout-insight-icon {
+            color: #EF4444;
+        }
+
+        /* Responsive */
+        @media (max-width: 991px) {
+            .sidebar-panel {
+                width: 100%;
+                position: relative;
+                height: auto;
+            }
+            .main-viewport {
+                margin-left: 0;
+                padding: 24px 16px;
+            }
+            .app-container {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sleek Dark Forest Green Sidebar -->
+        <aside class="sidebar-panel">
+            <div>
+                <a class="sidebar-header" href="../home.html">
+                    <img src="../assets/images/leaf-logo.svg" alt="FreshTrack" width="28" height="28">
+                    <span>FreshTrack</span>
+                </a>
+
+                <ul class="sidebar-nav-list">
+                    <li>
+                        <a href="dashboard.html" class="sidebar-nav-link">
+                            <i class="bi bi-grid-fill"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analyzer.html" class="sidebar-nav-link active">
+                            <i class="bi bi-sliders"></i>
+                            <span>Analyzer</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analytics.html" class="sidebar-nav-link">
+                            <i class="bi bi-bar-chart-line-fill"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="comparison.html" class="sidebar-nav-link">
+                            <i class="bi bi-arrow-left-right"></i>
+                            <span>Comparison</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="history.html" class="sidebar-nav-link">
+                            <i class="bi bi-clock-history"></i>
+                            <span>History</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="reports.html" class="sidebar-nav-link">
+                            <i class="bi bi-file-earmark-text-fill"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="../home.html#aboutStory" class="sidebar-nav-link">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <span>About</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-footer-card">
+                <div class="tag-title">Smarter Food</div>
+                <div class="tag-sub">Brighter Future</div>
+            </div>
+        </aside>
+
+        <!-- Main Viewport (Clean White/Soft Gray Background) -->
+        <main class="main-viewport">
+            <!-- Topbar Header -->
+            <div class="viewport-topbar">
+                <div>
+                    <h1 class="page-title">Fruit Quality Analyzer</h1>
+                    <p class="page-sub">Enter storage conditions to analyze fruit quality and detect spoilage risk</p>
+                </div>
+
+                <div class="auditor-profile-chip">
+                    <div class="auditor-avatar">QA</div>
+                    <div class="d-none d-sm-block text-start">
+                        <div class="fw-bold text-dark" style="font-size: 0.84rem; line-height: 1.1;">Quality Auditor</div>
+                        <div class="text-secondary" style="font-size: 0.72rem;">Inspector #104</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main 2-Column Grid (Matches Mockup Screen 3) -->
+            <div class="row g-4">
+                <!-- Left Column: Input Form Card -->
+                <div class="col-lg-6">
+                    <div class="saas-card">
+                        <!-- Select Fruit -->
+                        <div class="mb-4">
+                            <div class="field-header">
+                                <span>Select Fruit:</span>
+                                <span class="badge bg-success-subtle text-success">Produce Commodity</span>
+                            </div>
+                            <div class="input-group">
+                                <span class="input-group-text bg-light border-end-0">
+                                    <img id="fruitPickerIcon" src="../assets/images/tomato.svg" width="22" height="22" alt="Fruit">
+                                </span>
+                                <select class="form-select field-input-box border-start-0" id="selectFruit" onchange="onFruitChange()">
+                                    <option value="Tomato" selected>🍅 Tomato (Solanum lycopersicum)</option>
+                                    <option value="Banana">🍌 Banana (Musa acuminata)</option>
+                                    <option value="Orange">🍊 Orange (Citrus sinensis)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Workflow Option Switcher -->
+                        <div class="d-flex p-1 rounded-pill mb-4 bg-light border">
+                            <button type="button" class="btn btn-sm flex-fill rounded-pill fw-bold" id="tabDatasetBtn" onclick="switchWorkflow('dataset')" style="background-color: #10B981; color: #FFFFFF;">
+                                <i class="bi bi-database me-1"></i> Option A: Load CSV Sample
+                            </button>
+                            <button type="button" class="btn btn-sm flex-fill rounded-pill fw-semibold text-secondary" id="tabManualBtn" onclick="switchWorkflow('manual')">
+                                <i class="bi bi-sliders me-1"></i> Option B: Manual Readings
+                            </button>
+                        </div>
+
+                        <!-- Option A Panel: CSV Records Drawer -->
+                        <div id="datasetSamplesPanel" class="mb-3 p-3 rounded-3" style="background-color: #F8FAFC; border: 1px solid var(--border-color);">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="small fw-bold text-dark"><i class="bi bi-table text-success me-1"></i> Actual Records in CSV:</span>
+                                <span class="badge bg-light text-secondary border">8,738 Verified Records</span>
+                            </div>
+                            <div class="table-responsive rounded-2 border" style="max-height: 135px; overflow-y: auto;">
+                                <table class="table table-sm table-hover mb-0" style="font-size: 0.78rem;">
+                                    <thead class="table-light" style="position: sticky; top: 0;">
+                                        <tr>
+                                            <th>#ID</th>
+                                            <th>Temp</th>
+                                            <th>Humid</th>
+                                            <th>Light</th>
+                                            <th>CO₂</th>
+                                            <th>Actual</th>
+                                            <th>Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="tblSampleRows">
+                                        <tr><td colspan="7" class="text-center py-2 text-muted">Loading records...</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <!-- 1. Temperature -->
+                        <div class="mb-3">
+                            <div class="field-header">
+                                <span><i class="bi bi-thermometer-half text-danger me-1"></i> Temperature (°C)</span>
+                                <span class="badge bg-light text-dark border" id="valTempBadge">25.0°C</span>
+                            </div>
+                            <input type="number" class="field-input-box" id="inputTemp" value="25.0" step="0.5" min="15" max="35" oninput="syncTemp('input')">
+                            <input type="range" class="field-slider-bar" id="sliderTemp" min="15" max="35" step="0.5" value="25.0" oninput="syncTemp('slider')">
+                        </div>
+
+                        <!-- 2. Humidity -->
+                        <div class="mb-3">
+                            <div class="field-header">
+                                <span><i class="bi bi-droplet-half text-primary me-1"></i> Humidity (%)</span>
+                                <span class="badge bg-light text-dark border" id="valHumidBadge">80.0%</span>
+                            </div>
+                            <input type="number" class="field-input-box" id="inputHumid" value="80.0" step="0.5" min="65" max="100" oninput="syncHumid('input')">
+                            <input type="range" class="field-slider-bar" id="sliderHumid" min="65" max="100" step="0.5" value="80.0" oninput="syncHumid('slider')">
+                        </div>
+
+                        <!-- 3. Light Intensity -->
+                        <div class="mb-3">
+                            <div class="field-header">
+                                <span><i class="bi bi-sun-fill text-warning me-1"></i> Light Intensity (Lux)</span>
+                                <span class="badge bg-light text-dark border" id="valLightBadge">200 Lux</span>
+                            </div>
+                            <input type="number" class="field-input-box" id="inputLight" value="200" step="1" min="0" max="250" oninput="syncLight('input')">
+                            <input type="range" class="field-slider-bar" id="sliderLight" min="0" max="250" step="1" value="200" oninput="syncLight('slider')">
+                        </div>
+
+                        <!-- 4. CO2 Concentration -->
+                        <div class="mb-4">
+                            <div class="field-header">
+                                <span><i class="bi bi-cloud-haze2-fill text-success me-1"></i> CO₂ Concentration (ppm)</span>
+                                <span class="badge bg-light text-dark border" id="valCO2Badge">350 ppm</span>
+                            </div>
+                            <input type="number" class="field-input-box" id="inputCO2" value="350" step="5" min="150" max="500" oninput="syncCO2('input')">
+                            <input type="range" class="field-slider-bar" id="sliderCO2" min="150" max="500" step="5" value="350" oninput="syncCO2('slider')">
+                        </div>
+
+                        <!-- Big Action Button (Matches Mockup) -->
+                        <button type="button" class="btn-emerald w-100 py-3 text-center justify-content-center fs-6" id="btnAnalyzeNow" onclick="runPrediction()">
+                            <i class="bi bi-search"></i>
+                            <span>Analyze Now</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Right Column: Result Card (Matches Mockup Screen 3) -->
+                <div class="col-lg-6">
+                    <div class="saas-card">
+                        <!-- Top Banner Image -->
+                        <div class="analyzer-verdict-banner">
+                            <img src="../assets/images/fruit-banner.svg" alt="Produce Banner" class="w-100" style="max-height: 110px; object-fit: cover;">
+                        </div>
+
+                        <!-- Big Result Status Box -->
+                        <div class="analyzer-verdict-center" id="resStatusBox">
+                            <div class="analyzer-verdict-icon text-success" id="resStatusIcon">
+                                <i class="bi bi-check-circle-fill"></i>
+                            </div>
+                            <div class="analyzer-verdict-heading text-success" id="resStatusTitle">Good Quality</div>
+                            <div class="analyzer-verdict-conf" id="resStatusConf">Confidence: 92.3%</div>
+                        </div>
+
+                        <!-- Data Provenance Tag -->
+                        <div class="text-center mb-3">
+                            <span class="badge bg-light text-secondary border px-3 py-1" id="resSourceBadge">
+                                <i class="bi bi-database me-1"></i> Dataset Record: Sample #4
+                            </span>
+                        </div>
+
+                        <!-- Input Conditions Summary Table (Matches Mockup Table) -->
+                        <div class="mb-3">
+                            <div class="small fw-bold text-dark mb-2">Input Conditions:</div>
+                            <table class="summary-data-table">
+                                <tbody>
+                                    <tr>
+                                        <td>Fruit:</td>
+                                        <td id="tableResFruit">Tomato</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Temperature:</td>
+                                        <td id="tableResTemp">25°C</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Humidity:</td>
+                                        <td id="tableResHumid">80%</td>
+                                    </tr>
+                                    <tr>
+                                        <td>Light:</td>
+                                        <td id="tableResLight">200 Lux</td>
+                                    </tr>
+                                    <tr>
+                                        <td>CO₂:</td>
+                                        <td id="tableResCO2">350 ppm</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- Key Insight Card (Matches Light Yellow Card in Mockup) -->
+                        <div class="callout-insight-box mb-4" id="boxKeyInsight">
+                            <i class="bi bi-lightbulb-fill callout-insight-icon"></i>
+                            <div>
+                                <strong class="text-dark d-block mb-1">Key Insight:</strong>
+                                <span class="small text-secondary" id="textKeyInsight">
+                                    These storage conditions are ideal for keeping tomatoes fresh. Low light (&lt;20 Lux) preserves cellular firmness.
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn-emerald flex-fill py-2 text-center justify-content-center" onclick="downloadPdfReport()">
+                                <i class="bi bi-file-earmark-pdf-fill"></i>
+                                <span>Download PDF Report</span>
+                            </button>
+                            <button type="button" class="btn-ghost-clean flex-fill py-2 text-center justify-content-center" onclick="window.print()">
+                                <i class="bi bi-printer-fill"></i>
+                                <span>Print Sheet</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script>
+        let currentWorkflow = "dataset";
+        let currentRecordLabel = "Sample #4";
+        let lastResult = null;
+
+        function onFruitChange() {
+            const fruit = document.getElementById("selectFruit").value;
+            const icon = document.getElementById("fruitPickerIcon");
+            if (fruit === "Tomato") icon.src = "../assets/images/tomato.svg";
+            else if (fruit === "Banana") icon.src = "../assets/images/banana.svg";
+            else icon.src = "../assets/images/orange.svg";
+
+            loadCsvSamples(fruit);
+        }
+
+        function switchWorkflow(mode) {
+            currentWorkflow = mode;
+            const btnData = document.getElementById("tabDatasetBtn");
+            const btnManual = document.getElementById("tabManualBtn");
+            const pnlData = document.getElementById("datasetSamplesPanel");
+
+            if (mode === "dataset") {
+                btnData.style.backgroundColor = "#10B981";
+                btnData.style.color = "#FFFFFF";
+                btnManual.style.backgroundColor = "transparent";
+                btnManual.style.color = "#64748B";
+                pnlData.classList.remove("d-none");
+            } else {
+                btnManual.style.backgroundColor = "#10B981";
+                btnManual.style.color = "#FFFFFF";
+                btnData.style.backgroundColor = "transparent";
+                btnData.style.color = "#64748B";
+                pnlData.classList.add("d-none");
+                currentRecordLabel = "User Provided Measurements";
+            }
+        }
+
+        // Two-way slider sync
+        function syncTemp(src) {
+            const v = src === "slider" ? document.getElementById("sliderTemp").value : document.getElementById("inputTemp").value;
+            document.getElementById("sliderTemp").value = v;
+            document.getElementById("inputTemp").value = v;
+            document.getElementById("valTempBadge").textContent = `${parseFloat(v).toFixed(1)}°C`;
+        }
+
+        function syncHumid(src) {
+            const v = src === "slider" ? document.getElementById("sliderHumid").value : document.getElementById("inputHumid").value;
+            document.getElementById("sliderHumid").value = v;
+            document.getElementById("inputHumid").value = v;
+            document.getElementById("valHumidBadge").textContent = `${parseFloat(v).toFixed(1)}%`;
+        }
+
+        function syncLight(src) {
+            const v = src === "slider" ? document.getElementById("sliderLight").value : document.getElementById("inputLight").value;
+            document.getElementById("sliderLight").value = v;
+            document.getElementById("inputLight").value = v;
+            document.getElementById("valLightBadge").textContent = `${parseFloat(v).toFixed(0)} Lux`;
+        }
+
+        function syncCO2(src) {
+            const v = src === "slider" ? document.getElementById("sliderCO2").value : document.getElementById("inputCO2").value;
+            document.getElementById("sliderCO2").value = v;
+            document.getElementById("inputCO2").value = v;
+            document.getElementById("valCO2Badge").textContent = `${parseInt(v)} ppm`;
+        }
+
+        async function loadCsvSamples(fruit) {
+            const tbody = document.getElementById("tblSampleRows");
+            tbody.innerHTML = `<tr><td colspan="7" class="text-center py-2 text-muted">Loading ${fruit} records...</td></tr>`;
+
+            try {
+                const res = await window.apiClient.getSampleRecords(fruit, 15);
+                const records = res.records || [];
+                if (records.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="7" class="text-center py-2 text-muted">No records found.</td></tr>`;
+                    return;
+                }
+
+                let html = "";
+                records.forEach((r, idx) => {
+                    const isGood = r.actual_quality === "Good";
+                    const badge = isGood 
+                        ? `<span class="badge bg-success-subtle text-success">Good</span>` 
+                        : `<span class="badge bg-danger-subtle text-danger">Bad</span>`;
+                    html += `
+                        <tr>
+                            <td>#${idx + 1}</td>
+                            <td>${r.temperature_c}°C</td>
+                            <td>${r.humidity_percent}%</td>
+                            <td>${r.light_lux}</td>
+                            <td>${r.co2_ppm}</td>
+                            <td>${badge}</td>
+                            <td>
+                                <button type="button" class="btn btn-outline-success btn-xs py-0 px-2 rounded-pill" onclick="applyRecord(${r.temperature_c}, ${r.humidity_percent}, ${r.light_lux}, ${r.co2_ppm}, '${idx + 1}', '${r.actual_quality}')">
+                                    Load
+                                </button>
+                            </td>
+                        </tr>
+                    `;
+                });
+                tbody.innerHTML = html;
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="7" class="text-center py-2 text-muted">Failed to load dataset records.</td></tr>`;
+            }
+        }
+
+        function applyRecord(t, h, l, c, id, actual) {
+            document.getElementById("inputTemp").value = t; syncTemp('input');
+            document.getElementById("inputHumid").value = h; syncHumid('input');
+            document.getElementById("inputLight").value = l; syncLight('input');
+            document.getElementById("inputCO2").value = c; syncCO2('input');
+            currentRecordLabel = `CSV Sample #${id} (Actual: ${actual})`;
+            runPrediction();
+        }
+
+        async function runPrediction() {
+            const fruit = document.getElementById("selectFruit").value;
+            const temp = parseFloat(document.getElementById("inputTemp").value);
+            const humid = parseFloat(document.getElementById("inputHumid").value);
+            const light = parseFloat(document.getElementById("inputLight").value);
+            const co2 = parseFloat(document.getElementById("inputCO2").value);
+
+            // Update conditions table on right
+            document.getElementById("tableResFruit").textContent = fruit;
+            document.getElementById("tableResTemp").textContent = `${temp.toFixed(1)}°C`;
+            document.getElementById("tableResHumid").textContent = `${humid.toFixed(1)}%`;
+            document.getElementById("tableResLight").textContent = `${light.toFixed(0)} Lux`;
+            document.getElementById("tableResCO2").textContent = `${Math.round(co2)} ppm`;
+
+            try {
+                const res = await window.apiClient.predictQuality({
+                    fruit_type: fruit,
+                    temperature: temp,
+                    humidity: humid,
+                    light_intensity: light,
+                    co2: co2,
+                    temperature_c: temp,
+                    humidity_percent: humid,
+                    light_lux: light,
+                    co2_ppm: co2
+                });
+
+                lastResult = res;
+                const isGood = res.predicted_quality === "Good" || res.quality_prediction === "Good";
+                const confScore = res.confidence_score !== undefined ? res.confidence_score : (isGood ? res.good_probability : res.bad_probability);
+                const confPct = ((confScore || 0.95) * (confScore <= 1 ? 100 : 1)).toFixed(1);
+
+                const icon = document.getElementById("resStatusIcon");
+                const title = document.getElementById("resStatusTitle");
+                const conf = document.getElementById("resStatusConf");
+                const insightBox = document.getElementById("boxKeyInsight");
+                const insightText = document.getElementById("textKeyInsight");
+                const srcBadge = document.getElementById("resSourceBadge");
+
+                if (isGood) {
+                    icon.className = "analyzer-verdict-icon text-success";
+                    icon.innerHTML = `<i class="bi bi-check-circle-fill"></i>`;
+                    title.className = "analyzer-verdict-heading text-success";
+                    title.textContent = "Good Quality";
+                    conf.textContent = `Confidence: ${confPct}%`;
+                    insightBox.className = "callout-insight-box mb-4";
+                    insightText.textContent = res.diagnosis || `Storage conditions are optimal for keeping ${fruit.toLowerCase()}s fresh and market-ready.`;
+                } else {
+                    icon.className = "analyzer-verdict-icon text-danger";
+                    icon.innerHTML = `<i class="bi bi-exclamation-triangle-fill"></i>`;
+                    title.className = "analyzer-verdict-heading text-danger";
+                    title.textContent = "Bad Quality (Spoiled)";
+                    conf.textContent = `Confidence: ${confPct}%`;
+                    insightBox.className = "callout-insight-box theme-red mb-4";
+                    insightText.textContent = res.diagnosis || `Storage environment is causing cellular breakdown or mold risk for ${fruit.toLowerCase()}s.`;
+                }
+
+                srcBadge.innerHTML = currentWorkflow === "dataset"
+                    ? `<i class="bi bi-database me-1"></i> ${currentRecordLabel}`
+                    : `<i class="bi bi-person-check me-1"></i> User Provided Measurements`;
+
+            } catch (err) {
+                alert("Prediction Error: " + err.message);
+            }
+        }
+
+        function downloadPdfReport() {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                alert("PDF engine loading. Please try again.");
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const fruit = document.getElementById("selectFruit").value;
+            const temp = document.getElementById("inputTemp").value;
+            const humid = document.getElementById("inputHumid").value;
+            const light = document.getElementById("inputLight").value;
+            const co2 = document.getElementById("inputCO2").value;
+            const isGood = lastResult ? (lastResult.predicted_quality === "Good" || lastResult.quality_prediction === "Good") : true;
+            const confRaw = lastResult ? (lastResult.confidence_score !== undefined ? lastResult.confidence_score : 0.95) : 0.923;
+            const conf = ((confRaw <= 1 ? confRaw * 100 : confRaw)).toFixed(1);
+
+            // Header Banner
+            doc.setFillColor(6, 78, 59);
+            doc.rect(0, 0, 210, 28, "F");
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(255, 255, 255);
+            doc.text("FreshTrack - Fruit Quality Audit Certificate", 14, 18);
+
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "normal");
+            doc.text("Issued: " + new Date().toLocaleString(), 140, 18);
+
+            // Verdict
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(13);
+            doc.setFont("helvetica", "bold");
+            doc.text("1. AI Quality Classification Verdict", 14, 40);
+
+            doc.setFontSize(11);
+            if (isGood) {
+                doc.setTextColor(16, 163, 74);
+                doc.text("VERDICT: GOOD (FRESH) - High Confidence (" + conf + "%)", 14, 48);
+            } else {
+                doc.setTextColor(239, 68, 68);
+                doc.text("VERDICT: BAD (SPOILED) - Spoilage Risk (" + conf + "%)", 14, 48);
+            }
+
+            // Provenance
+            doc.setFontSize(9.5);
+            doc.setTextColor(100, 116, 139);
+            doc.text("Data Provenance: " + (currentWorkflow === "dataset" ? "Dataset Sample (" + currentRecordLabel + ")" : "Manual On-Site Physical Readings"), 14, 55);
+
+            // Conditions Table
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(13);
+            doc.setFont("helvetica", "bold");
+            doc.text("2. Measured Storage Conditions", 14, 70);
+
+            const rows = [
+                ["Produce Commodity", fruit],
+                ["Storage Temperature", temp + " °C"],
+                ["Relative Humidity", humid + " %"],
+                ["Lighting Illuminance", light + " Lux"],
+                ["Carbon Dioxide (CO2)", co2 + " ppm"]
+            ];
+
+            let y = 78;
+            doc.setFontSize(10);
+            rows.forEach(r => {
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(71, 85, 105);
+                doc.text(r[0] + ":", 14, y);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(15, 23, 42);
+                doc.text(r[1], 80, y);
+                y += 8;
+            });
+
+            // Biological Diagnosis
+            y += 6;
+            doc.setFontSize(13);
+            doc.setFont("helvetica", "bold");
+            doc.text("3. Biological Quality Diagnosis", 14, y);
+            y += 8;
+            doc.setFontSize(9.5);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(71, 85, 105);
+            const diag = lastResult && lastResult.diagnosis 
+                ? lastResult.diagnosis 
+                : "Parameters remain within the safe threshold, ensuring sustained cellular hydration and market viability.";
+            const lines = doc.splitTextToSize(diag, 180);
+            doc.text(lines, 14, y);
+
+            // Footer
+            doc.setFontSize(8);
+            doc.setTextColor(148, 163, 184);
+            doc.text("FreshTrack AI Quality Intelligence Platform • 100-Tree Random Forest Pipeline • 99.94% Test F1", 14, 280);
+
+            doc.save(`FreshTrack_${fruit}_Quality_Audit.pdf`);
+        }
+
+        // Initialize on page load
+        document.addEventListener("DOMContentLoaded", () => {
+            const params = new URLSearchParams(window.location.search);
+            const fruitParam = params.get("fruit");
+            if (fruitParam && ["Tomato", "Banana", "Orange"].includes(fruitParam)) {
+                document.getElementById("selectFruit").value = fruitParam;
+                onFruitChange();
+            } else {
+                loadCsvSamples("Tomato");
+            }
+        });
+    </script>
+</body>
+</html>

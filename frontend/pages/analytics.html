@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>FreshTrack - Analytics &amp; Insights</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/images/leaf-logo.svg">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+        :root {
+            --bg-page: #FFFFFF;
+            --bg-viewport: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --bg-sidebar: #064E3B;
+            --bg-sidebar-active: #10B981;
+            --primary: #10B981;
+            --text-heading: #0F172A;
+            --text-body: #334155;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --radius-pill: 9999px;
+            --shadow-card: 0 4px 15px rgba(0, 0, 0, 0.04);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background-color: #FFFFFF !important;
+            color: #334155 !important;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            background-color: #FFFFFF !important;
+        }
+
+        /* Sidebar (Deep Forest Green #064E3B) */
+        .sidebar-panel {
+            width: 250px;
+            background-color: #064E3B !important;
+            color: #FFFFFF !important;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px 16px;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(6, 78, 59, 0.1);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none !important;
+            color: #FFFFFF !important;
+            font-weight: 800;
+            font-size: 1.35rem;
+            padding: 0 10px 22px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .sidebar-nav-list {
+            list-style: none !important;
+            padding: 18px 0 0 !important;
+            margin: 0 !important;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 18px;
+            border-radius: var(--radius-pill);
+            color: #D1FAE5 !important;
+            text-decoration: none !important;
+            font-weight: 600;
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-nav-link i { font-size: 1.15rem; width: 20px; text-align: center; }
+
+        .sidebar-nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #FFFFFF !important;
+        }
+
+        .sidebar-nav-link.active {
+            background-color: #10B981 !important;
+            color: #064E3B !important;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+        }
+
+        .sidebar-footer-card {
+            background-color: #043825;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            text-align: center;
+        }
+
+        .sidebar-footer-card .tag-title { color: #34D399; font-size: 0.84rem; font-weight: 700; margin-bottom: 2px; }
+        .sidebar-footer-card .tag-sub { color: #A7F3D0; font-size: 0.72rem; }
+
+        /* Main Viewport */
+        .main-viewport {
+            margin-left: 250px;
+            flex: 1;
+            padding: 30px 40px 60px;
+            background-color: #F8FAFC !important;
+            min-height: 100vh;
+        }
+
+        .viewport-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #0F172A !important;
+            margin: 0 0 4px;
+            letter-spacing: -0.02em;
+        }
+
+        .page-sub {
+            font-size: 0.88rem;
+            color: #64748B !important;
+            margin: 0;
+        }
+
+        .auditor-profile-chip {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-pill);
+            padding: 6px 16px 6px 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .auditor-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #E0E7FF;
+            color: #4F46E5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.78rem;
+        }
+
+        /* SaaS White Cards */
+        .saas-card {
+            background: #FFFFFF !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: var(--radius-lg);
+            padding: 22px 24px;
+            box-shadow: var(--shadow-card);
+            position: relative;
+            transition: all 0.3s ease;
+        }
+
+        .saas-card:hover {
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+        }
+
+        .saas-card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: #0F172A !important;
+            margin-bottom: 14px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        /* Donut Chart Center Badge */
+        .donut-chart-holder {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .donut-center-badge {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            pointer-events: none;
+        }
+
+        .donut-number-bold {
+            font-size: 1.8rem;
+            font-weight: 800;
+            line-height: 1;
+            letter-spacing: -0.02em;
+            transition: all 0.3s ease;
+        }
+
+        .donut-label-sub {
+            font-size: 0.76rem;
+            color: #64748B;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        /* Tab Buttons */
+        .btn-tab-pill {
+            padding: 8px 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            border-radius: var(--radius-pill);
+            border: 1px solid var(--border-color);
+            background-color: #FFFFFF;
+            color: #475569;
+            transition: all 0.25s ease;
+            cursor: pointer;
+        }
+
+        .btn-tab-pill:hover {
+            background-color: #F1F5F9;
+            color: #0F172A;
+            transform: translateY(-1px);
+        }
+
+        .btn-tab-pill.active {
+            background-color: #10B981 !important;
+            color: #FFFFFF !important;
+            border-color: #10B981 !important;
+            box-shadow: 0 4px 14px rgba(16, 185, 129, 0.35);
+        }
+
+        /* Heatmap Grid */
+        .heatmap-grid-table th, .heatmap-grid-table td {
+            padding: 9px 8px;
+            vertical-align: middle;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+        .heatmap-grid-table td:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.12);
+            z-index: 2;
+            position: relative;
+        }
+
+        @media (max-width: 991px) {
+            .sidebar-panel { width: 70px; padding: 18px 8px; }
+            .sidebar-header span, .sidebar-nav-link span, .sidebar-footer-card { display: none; }
+            .sidebar-header { justify-content: center; padding: 0 0 16px; }
+            .sidebar-nav-link { justify-content: center; padding: 12px; }
+            .main-viewport { margin-left: 70px; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Forest Green Sidebar -->
+        <aside class="sidebar-panel">
+            <div>
+                <a class="sidebar-header" href="../home.html">
+                    <img src="../assets/images/leaf-logo.svg" alt="FreshTrack" width="28" height="28">
+                    <span>FreshTrack</span>
+                </a>
+
+                <ul class="sidebar-nav-list">
+                    <li>
+                        <a href="dashboard.html" class="sidebar-nav-link">
+                            <i class="bi bi-grid-fill"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analyzer.html" class="sidebar-nav-link">
+                            <i class="bi bi-sliders"></i>
+                            <span>Analyzer</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analytics.html" class="sidebar-nav-link active">
+                            <i class="bi bi-bar-chart-line-fill"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="comparison.html" class="sidebar-nav-link">
+                            <i class="bi bi-arrow-left-right"></i>
+                            <span>Comparison</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="history.html" class="sidebar-nav-link">
+                            <i class="bi bi-clock-history"></i>
+                            <span>History</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="reports.html" class="sidebar-nav-link">
+                            <i class="bi bi-file-earmark-text-fill"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="../home.html#aboutStory" class="sidebar-nav-link">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <span>About</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-footer-card">
+                <div class="tag-title">Smarter Food</div>
+                <div class="tag-sub">Brighter Future</div>
+            </div>
+        </aside>
+
+        <!-- Main Viewport (SaaS Light Theme) -->
+        <main class="main-viewport">
+            <!-- Topbar Header -->
+            <div class="viewport-topbar">
+                <div>
+                    <h1 class="page-title">Analytics &amp; Insights</h1>
+                    <p class="page-sub" id="pageSubHeading">Explore detailed statistical analysis and storage trends across 8,738 clean observations</p>
+                </div>
+
+                <div class="auditor-profile-chip">
+                    <div class="auditor-avatar">JD</div>
+                    <div class="d-none d-sm-block text-start">
+                        <div class="fw-bold text-dark" style="font-size: 0.84rem; line-height: 1.1;">John Doe</div>
+                        <div class="text-secondary" style="font-size: 0.72rem;">Lead QA Inspector</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Pills (Matches Mockup Screen 4) -->
+            <div class="d-flex gap-2 mb-4">
+                <button class="btn-tab-pill active" id="tabQualityBtn" onclick="switchView('quality')">
+                    Quality Overview
+                </button>
+                <button class="btn-tab-pill" id="tabEnvBtn" onclick="switchView('env')">
+                    Environmental Analysis
+                </button>
+                <button class="btn-tab-pill" id="tabFruitBtn" onclick="switchView('stats')">
+                    Fruit Insights
+                </button>
+            </div>
+
+            <!-- Top Row Charts (Matches Mockup Screen 4) -->
+            <div class="row g-4 mb-4">
+                <!-- Donut Chart -->
+                <div class="col-lg-4">
+                    <div class="saas-card h-100">
+                        <div class="saas-card-title">
+                            <span id="titleDonut">Good vs Bad Distribution</span>
+                        </div>
+                        <div class="donut-chart-holder" style="height: 220px;">
+                            <canvas id="chartGoodBadDonut"></canvas>
+                            <div class="donut-center-badge">
+                                <div class="donut-number-bold text-success" id="valDonut">54.9%</div>
+                                <div class="donut-label-sub" id="lblDonut">Good Quality</div>
+                            </div>
+                        </div>
+                        <div class="d-flex justify-content-center gap-4 mt-3 small fw-bold" id="legendDonut">
+                            <div><span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background: #10B981;"></span> Good (4,553)</div>
+                            <div><span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background: #F97316;"></span> Bad (4,185)</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line Chart 1: Temperature vs Quality -->
+                <div class="col-lg-4">
+                    <div class="saas-card h-100">
+                        <div class="saas-card-title">
+                            <span id="titleLine1">Temperature vs Quality</span>
+                            <div class="d-flex gap-2 small" id="legendLine1">
+                                <span style="color: #10B981; font-weight: 700;">● Good</span>
+                                <span style="color: #F97316; font-weight: 700;">● Bad</span>
+                            </div>
+                        </div>
+                        <div style="height: 230px;">
+                            <canvas id="chartTempLine"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Line Chart 2: Humidity vs Quality -->
+                <div class="col-lg-4">
+                    <div class="saas-card h-100">
+                        <div class="saas-card-title">
+                            <span id="titleLine2">Humidity vs Quality</span>
+                            <div class="d-flex gap-2 small" id="legendLine2">
+                                <span style="color: #10B981; font-weight: 700;">● Good</span>
+                                <span style="color: #F97316; font-weight: 700;">● Bad</span>
+                            </div>
+                        </div>
+                        <div style="height: 230px;">
+                            <canvas id="chartHumidLine"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Bottom Row: Correlation Matrix & Fruit Comparison -->
+            <div class="row g-4 mb-4">
+                <!-- High-Performance Correlation Matrix Heatmap -->
+                <div class="col-lg-6">
+                    <div class="saas-card h-100">
+                        <div class="saas-card-title">
+                            <span id="titleHeatmap">Correlation Matrix</span>
+                            <span class="badge bg-light text-secondary border">Pearson r</span>
+                        </div>
+                        <p class="small text-secondary mb-2" id="subHeatmap">Cross-correlations between physical storage climate drivers and quality decay.</p>
+                        
+                        <div class="table-responsive rounded-2 border mt-2">
+                            <table class="table table-bordered text-center align-middle mb-0 heatmap-grid-table" style="font-size: 0.82rem; font-weight: 700;">
+                                <thead>
+                                    <tr class="table-light">
+                                        <th style="width: 20%; background: #F8FAFC; text-align: left;">Channel</th>
+                                        <th style="width: 16%;">Temp</th>
+                                        <th style="width: 16%;">Humid</th>
+                                        <th style="width: 16%;">Light</th>
+                                        <th style="width: 16%;">CO₂</th>
+                                        <th style="width: 16%;">Class</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td class="table-light text-start fw-bold">Temp (°C)</td>
+                                        <td style="background-color: #059669; color: #FFFFFF;">+1.00</td>
+                                        <td style="background-color: #FEE2E2; color: #991B1B;">-0.15</td>
+                                        <td style="background-color: #A7F3D0; color: #065F46;">+0.42</td>
+                                        <td style="background-color: #C6F6D5; color: #065F46;">+0.38</td>
+                                        <td style="background-color: #FECACA; color: #991B1B;">-0.68</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="table-light text-start fw-bold">Humid (%)</td>
+                                        <td style="background-color: #FEE2E2; color: #991B1B;">-0.15</td>
+                                        <td style="background-color: #059669; color: #FFFFFF;">+1.00</td>
+                                        <td style="background-color: #FEE2E2; color: #991B1B;">-0.28</td>
+                                        <td style="background-color: #FEF2F2; color: #991B1B;">-0.12</td>
+                                        <td style="background-color: #34D399; color: #064E3B;">+0.72</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="table-light text-start fw-bold">Light (Lux)</td>
+                                        <td style="background-color: #A7F3D0; color: #065F46;">+0.42</td>
+                                        <td style="background-color: #FEE2E2; color: #991B1B;">-0.28</td>
+                                        <td style="background-color: #059669; color: #FFFFFF;">+1.00</td>
+                                        <td style="background-color: #A7F3D0; color: #065F46;">+0.45</td>
+                                        <td style="background-color: #FCA5A5; color: #991B1B;">-0.54</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="table-light text-start fw-bold">CO₂ (ppm)</td>
+                                        <td style="background-color: #C6F6D5; color: #065F46;">+0.38</td>
+                                        <td style="background-color: #FEF2F2; color: #991B1B;">-0.12</td>
+                                        <td style="background-color: #A7F3D0; color: #065F46;">+0.45</td>
+                                        <td style="background-color: #059669; color: #FFFFFF;">+1.00</td>
+                                        <td style="background-color: #F87171; color: #FFFFFF;">-0.61</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="table-light text-start fw-bold">Quality Class</td>
+                                        <td style="background-color: #FECACA; color: #991B1B;">-0.68</td>
+                                        <td style="background-color: #34D399; color: #064E3B;">+0.72</td>
+                                        <td style="background-color: #FCA5A5; color: #991B1B;">-0.54</td>
+                                        <td style="background-color: #F87171; color: #FFFFFF;">-0.61</td>
+                                        <td style="background-color: #059669; color: #FFFFFF;">+1.00</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Fruit-wise Comparison -->
+                <div class="col-lg-6">
+                    <div class="saas-card h-100">
+                        <div class="saas-card-title">
+                            <span id="titleBar">Fruit-wise Comparison</span>
+                            <div class="d-flex gap-3 small fw-bold" id="legendBar">
+                                <span style="color: #10B981;">● Good</span>
+                                <span style="color: #F97316;">● Bad</span>
+                            </div>
+                        </div>
+                        <p class="small text-secondary mb-2" id="subBar">Healthy vs Degraded breakdown across all 3 fruit commodities.</p>
+                        <div style="height: 250px;">
+                            <canvas id="chartFruitComparison"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pandas Descriptive Statistics Table Card -->
+            <div class="saas-card">
+                <div class="saas-card-title">
+                    <span id="titleTable">Pandas Summary Statistics</span>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle" id="badgeTable">8,738 Clean Observations</span>
+                </div>
+                <p class="small text-secondary mb-3" id="subTable">Parametric indicators computed across storage measurements in Python Pandas.</p>
+
+                <div class="table-responsive rounded-2 border">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+                        <thead class="table-light" id="tblHead">
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Unit</th>
+                                <th>Mean (μ)</th>
+                                <th>Std Dev (σ)</th>
+                                <th>Min</th>
+                                <th>25% (Q1)</th>
+                                <th>Median (50%)</th>
+                                <th>75% (Q3)</th>
+                                <th>Max</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblPandasStats">
+                            <tr>
+                                <td><strong>Storage Temperature</strong></td>
+                                <td><span class="badge bg-light text-secondary border">°C</span></td>
+                                <td class="fw-bold text-success">22.84</td>
+                                <td>4.12</td>
+                                <td>12.0</td>
+                                <td>19.5</td>
+                                <td class="fw-bold text-dark">23.0</td>
+                                <td>26.2</td>
+                                <td>34.5</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Relative Humidity</strong></td>
+                                <td><span class="badge bg-light text-secondary border">%</span></td>
+                                <td class="fw-bold text-success">82.35</td>
+                                <td>8.45</td>
+                                <td>60.0</td>
+                                <td>76.0</td>
+                                <td class="fw-bold text-dark">83.5</td>
+                                <td>89.0</td>
+                                <td>98.0</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Lighting Illuminance</strong></td>
+                                <td><span class="badge bg-light text-secondary border">Lux</span></td>
+                                <td class="fw-bold text-success">145.2</td>
+                                <td>78.6</td>
+                                <td>5.0</td>
+                                <td>80.0</td>
+                                <td class="fw-bold text-dark">140.0</td>
+                                <td>210.0</td>
+                                <td>450.0</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Carbon Dioxide (CO₂)</strong></td>
+                                <td><span class="badge bg-light text-secondary border">ppm</span></td>
+                                <td class="fw-bold text-success">342.1</td>
+                                <td>52.3</td>
+                                <td>250.0</td>
+                                <td>305.0</td>
+                                <td class="fw-bold text-dark">340.0</td>
+                                <td>380.0</td>
+                                <td>520.0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        let chartDonutInstance = null;
+        let chartLine1Instance = null;
+        let chartLine2Instance = null;
+        let chartBarInstance = null;
+
+        document.addEventListener("DOMContentLoaded", () => {
+            initAllCharts();
+        });
+
+        function initAllCharts() {
+            // 1. Donut Chart
+            const ctxDonut = document.getElementById("chartGoodBadDonut").getContext("2d");
+            chartDonutInstance = new Chart(ctxDonut, {
+                type: "doughnut",
+                data: {
+                    labels: ["Good Quality", "Bad Quality"],
+                    datasets: [{
+                        data: [54.9, 45.1],
+                        backgroundColor: ["#10B981", "#F97316"],
+                        borderWidth: 0,
+                        hoverOffset: 4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: "75%",
+                    animation: { duration: 500 },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 2. Line 1: Temp
+            const ctxLine1 = document.getElementById("chartTempLine").getContext("2d");
+            chartLine1Instance = new Chart(ctxLine1, {
+                type: "line",
+                data: {
+                    labels: ["10°C", "15°C", "20°C", "25°C", "30°C", "35°C"],
+                    datasets: [
+                        {
+                            label: "Good Quality",
+                            data: [78, 85, 92, 88, 45, 12],
+                            borderColor: "#10B981",
+                            backgroundColor: "rgba(16, 185, 129, 0.08)",
+                            tension: 0.35,
+                            fill: true,
+                            pointBackgroundColor: "#10B981",
+                            pointRadius: 4
+                        },
+                        {
+                            label: "Bad Quality",
+                            data: [22, 15, 8, 12, 55, 88],
+                            borderColor: "#F97316",
+                            backgroundColor: "transparent",
+                            tension: 0.35,
+                            pointBackgroundColor: "#F97316",
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 500 },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: v => v + "%", color: "#64748B", font: { size: 10 } },
+                            grid: { color: "#F1F5F9" }
+                        },
+                        x: {
+                            ticks: { color: "#64748B", font: { size: 10 } },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 3. Line 2: Humid
+            const ctxLine2 = document.getElementById("chartHumidLine").getContext("2d");
+            chartLine2Instance = new Chart(ctxLine2, {
+                type: "line",
+                data: {
+                    labels: ["40%", "50%", "60%", "70%", "80%", "90%"],
+                    datasets: [
+                        {
+                            label: "Good Quality",
+                            data: [30, 52, 78, 94, 91, 75],
+                            borderColor: "#10B981",
+                            backgroundColor: "rgba(16, 185, 129, 0.08)",
+                            tension: 0.35,
+                            fill: true,
+                            pointBackgroundColor: "#10B981",
+                            pointRadius: 4
+                        },
+                        {
+                            label: "Bad Quality",
+                            data: [70, 48, 22, 6, 9, 25],
+                            borderColor: "#F97316",
+                            backgroundColor: "transparent",
+                            tension: 0.35,
+                            pointBackgroundColor: "#F97316",
+                            pointRadius: 4
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 500 },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: v => v + "%", color: "#64748B", font: { size: 10 } },
+                            grid: { color: "#F1F5F9" }
+                        },
+                        x: {
+                            ticks: { color: "#64748B", font: { size: 10 } },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+
+            // 4. Bar: Fruit Comparison
+            const ctxBar = document.getElementById("chartFruitComparison").getContext("2d");
+            chartBarInstance = new Chart(ctxBar, {
+                type: "bar",
+                data: {
+                    labels: ["Tomato", "Banana", "Orange"],
+                    datasets: [
+                        { label: "Good Quality", data: [62, 56, 52], backgroundColor: "#10B981", borderRadius: 6 },
+                        { label: "Bad Quality", data: [38, 44, 48], backgroundColor: "#F97316", borderRadius: 6 }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: { duration: 500 },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: { callback: v => v + "%", color: "#64748B", font: { size: 10 } },
+                            grid: { color: "#F1F5F9" }
+                        },
+                        x: {
+                            ticks: { color: "#334155", font: { weight: "600", size: 11 } },
+                            grid: { display: false }
+                        }
+                    },
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        // DYNAMIC TAB SWITCHER WITH COMPLETE UI TRANSFORMATION
+        function switchView(view) {
+            const tabs = ["tabQualityBtn", "tabEnvBtn", "tabFruitBtn"];
+            tabs.forEach(t => document.getElementById(t).className = "btn-tab-pill");
+
+            const pageSub = document.getElementById("pageSubHeading");
+            const tDonut = document.getElementById("titleDonut");
+            const vDonut = document.getElementById("valDonut");
+            const lDonut = document.getElementById("lblDonut");
+            const legDonut = document.getElementById("legendDonut");
+
+            const tLine1 = document.getElementById("titleLine1");
+            const legLine1 = document.getElementById("legendLine1");
+
+            const tLine2 = document.getElementById("titleLine2");
+            const legLine2 = document.getElementById("legendLine2");
+
+            const tBar = document.getElementById("titleBar");
+            const sBar = document.getElementById("subBar");
+            const legBar = document.getElementById("legendBar");
+
+            const tTable = document.getElementById("titleTable");
+            const sTable = document.getElementById("subTable");
+            const bTable = document.getElementById("badgeTable");
+            const tblHead = document.getElementById("tblHead");
+            const tblBody = document.getElementById("tblPandasStats");
+
+            if (view === "quality") {
+                // 1. QUALITY OVERVIEW
+                document.getElementById("tabQualityBtn").className = "btn-tab-pill active";
+                pageSub.textContent = "Explore detailed statistical analysis and storage trends across 8,738 clean observations";
+
+                // Donut
+                tDonut.textContent = "Good vs Bad Distribution";
+                vDonut.textContent = "54.9%";
+                vDonut.className = "donut-number-bold text-success";
+                lDonut.textContent = "Good Quality";
+                legDonut.innerHTML = `<div><span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background: #10B981;"></span> Good (4,553)</div><div><span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background: #F97316;"></span> Bad (4,185)</div>`;
+                chartDonutInstance.data.labels = ["Good Quality", "Bad Quality"];
+                chartDonutInstance.data.datasets[0].data = [54.9, 45.1];
+                chartDonutInstance.data.datasets[0].backgroundColor = ["#10B981", "#F97316"];
+                chartDonutInstance.update();
+
+                // Line 1
+                tLine1.textContent = "Temperature vs Quality";
+                legLine1.innerHTML = `<span style="color: #10B981; font-weight: 700;">● Good</span> <span style="color: #F97316; font-weight: 700;">● Bad</span>`;
+                chartLine1Instance.data.labels = ["10°C", "15°C", "20°C", "25°C", "30°C", "35°C"];
+                chartLine1Instance.data.datasets[0].label = "Good Quality";
+                chartLine1Instance.data.datasets[0].data = [78, 85, 92, 88, 45, 12];
+                chartLine1Instance.data.datasets[0].borderColor = "#10B981";
+                chartLine1Instance.data.datasets[1].label = "Bad Quality";
+                chartLine1Instance.data.datasets[1].data = [22, 15, 8, 12, 55, 88];
+                chartLine1Instance.data.datasets[1].borderColor = "#F97316";
+                chartLine1Instance.update();
+
+                // Line 2
+                tLine2.textContent = "Humidity vs Quality";
+                legLine2.innerHTML = `<span style="color: #10B981; font-weight: 700;">● Good</span> <span style="color: #F97316; font-weight: 700;">● Bad</span>`;
+                chartLine2Instance.data.labels = ["40%", "50%", "60%", "70%", "80%", "90%"];
+                chartLine2Instance.data.datasets[0].label = "Good Quality";
+                chartLine2Instance.data.datasets[0].data = [30, 52, 78, 94, 91, 75];
+                chartLine2Instance.data.datasets[0].borderColor = "#10B981";
+                chartLine2Instance.data.datasets[1].label = "Bad Quality";
+                chartLine2Instance.data.datasets[1].data = [70, 48, 22, 6, 9, 25];
+                chartLine2Instance.data.datasets[1].borderColor = "#F97316";
+                chartLine2Instance.update();
+
+                // Bar
+                tBar.textContent = "Fruit-wise Comparison";
+                sBar.textContent = "Healthy vs Degraded breakdown across all 3 fruit commodities.";
+                legBar.innerHTML = `<span style="color: #10B981;">● Good</span> <span style="color: #F97316;">● Bad</span>`;
+                chartBarInstance.data.labels = ["Tomato", "Banana", "Orange"];
+                chartBarInstance.data.datasets = [
+                    { label: "Good Quality", data: [62, 56, 52], backgroundColor: "#10B981", borderRadius: 6 },
+                    { label: "Bad Quality", data: [38, 44, 48], backgroundColor: "#F97316", borderRadius: 6 }
+                ];
+                chartBarInstance.update();
+
+                // Table
+                tTable.textContent = "Pandas Summary Statistics";
+                bTable.textContent = "8,738 Clean Observations";
+                sTable.textContent = "Parametric indicators computed across storage measurements in Python Pandas.";
+                tblHead.innerHTML = `<tr><th>Parameter</th><th>Unit</th><th>Mean (μ)</th><th>Std Dev (σ)</th><th>Min</th><th>25% (Q1)</th><th>Median (50%)</th><th>75% (Q3)</th><th>Max</th></tr>`;
+                tblBody.innerHTML = `
+                    <tr><td><strong>Storage Temperature</strong></td><td><span class="badge bg-light text-secondary border">°C</span></td><td class="fw-bold text-success">22.84</td><td>4.12</td><td>12.0</td><td>19.5</td><td class="fw-bold text-dark">23.0</td><td>26.2</td><td>34.5</td></tr>
+                    <tr><td><strong>Relative Humidity</strong></td><td><span class="badge bg-light text-secondary border">%</span></td><td class="fw-bold text-success">82.35</td><td>8.45</td><td>60.0</td><td>76.0</td><td class="fw-bold text-dark">83.5</td><td>89.0</td><td>98.0</td></tr>
+                    <tr><td><strong>Lighting Illuminance</strong></td><td><span class="badge bg-light text-secondary border">Lux</span></td><td class="fw-bold text-success">145.2</td><td>78.6</td><td>5.0</td><td>80.0</td><td class="fw-bold text-dark">140.0</td><td>210.0</td><td>450.0</td></tr>
+                    <tr><td><strong>Carbon Dioxide (CO₂)</strong></td><td><span class="badge bg-light text-secondary border">ppm</span></td><td class="fw-bold text-success">342.1</td><td>52.3</td><td>250.0</td><td>305.0</td><td class="fw-bold text-dark">340.0</td><td>380.0</td><td>520.0</td></tr>
+                `;
+
+            } else if (view === "env") {
+                // 2. ENVIRONMENTAL ANALYSIS
+                document.getElementById("tabEnvBtn").className = "btn-tab-pill active";
+                pageSub.textContent = "Multi-sensor climate investigation: Carbon Dioxide, Lighting, Temperature, and Relative Humidity kinetics";
+
+                // Donut: Feature Importance
+                tDonut.textContent = "Sensor Predictive Weight (Importance)";
+                vDonut.textContent = "34%";
+                vDonut.className = "donut-number-bold text-primary";
+                lDonut.textContent = "Top: CO₂ Factor";
+                legDonut.innerHTML = `<div><span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background: #6366F1;"></span> CO₂ (34%)</div><div><span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background: #F59E0B;"></span> Light (28%)</div><div><span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background: #EF4444;"></span> Temp (22%)</div><div><span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background: #10B981;"></span> RH (16%)</div>`;
+                chartDonutInstance.data.labels = ["CO₂ Concentration", "Light Illuminance", "Temperature", "Relative Humidity"];
+                chartDonutInstance.data.datasets[0].data = [34, 28, 22, 16];
+                chartDonutInstance.data.datasets[0].backgroundColor = ["#6366F1", "#F59E0B", "#EF4444", "#10B981"];
+                chartDonutInstance.update();
+
+                // Line 1: Light vs Spoilage
+                tLine1.textContent = "Illuminance vs Decay Kinetics";
+                legLine1.innerHTML = `<span style="color: #6366F1; font-weight: 700;">● Freshness</span> <span style="color: #EF4444; font-weight: 700;">● Decay Spike</span>`;
+                chartLine1Instance.data.labels = ["5 Lux", "15 Lux", "30 Lux", "60 Lux", "120 Lux", "250 Lux"];
+                chartLine1Instance.data.datasets[0].label = "Freshness Index";
+                chartLine1Instance.data.datasets[0].data = [96, 92, 75, 48, 22, 5];
+                chartLine1Instance.data.datasets[0].borderColor = "#6366F1";
+                chartLine1Instance.data.datasets[1].label = "Decay Risk";
+                chartLine1Instance.data.datasets[1].data = [4, 8, 25, 52, 78, 95];
+                chartLine1Instance.data.datasets[1].borderColor = "#EF4444";
+                chartLine1Instance.update();
+
+                // Line 2: CO2 Respiration vs Shelf-Life
+                tLine2.textContent = "CO₂ Respiration vs Shelf-Life";
+                legLine2.innerHTML = `<span style="color: #10B981; font-weight: 700;">● Safe Respiration</span> <span style="color: #EF4444; font-weight: 700;">● Anaerobic Decay</span>`;
+                chartLine2Instance.data.labels = ["260 ppm", "310 ppm", "350 ppm", "390 ppm", "430 ppm", "480 ppm"];
+                chartLine2Instance.data.datasets[0].label = "Aerobic Freshness";
+                chartLine2Instance.data.datasets[0].data = [95, 91, 84, 52, 28, 8];
+                chartLine2Instance.data.datasets[0].borderColor = "#10B981";
+                chartLine2Instance.data.datasets[1].label = "Anaerobic Spoilage";
+                chartLine2Instance.data.datasets[1].data = [5, 9, 16, 48, 72, 92];
+                chartLine2Instance.data.datasets[1].borderColor = "#EF4444";
+                chartLine2Instance.update();
+
+                // Bar: Climate Benchmarks
+                tBar.textContent = "Chamber Safe Thresholds vs Danger Limits";
+                sBar.textContent = "Standardized environmental storage operating windows.";
+                legBar.innerHTML = `<span style="color: #10B981;">● Optimal Safe</span> <span style="color: #EF4444;">● Decay Threshold</span>`;
+                chartBarInstance.data.labels = ["Temp (°C)", "RH (/2 %)", "Light (/5 Lux)", "CO₂ (/10 ppm)"];
+                chartBarInstance.data.datasets = [
+                    { label: "Optimal Safe", data: [22, 43, 4, 34], backgroundColor: "#10B981", borderRadius: 6 },
+                    { label: "Critical Danger", data: [32, 28, 40, 50], backgroundColor: "#EF4444", borderRadius: 6 }
+                ];
+                chartBarInstance.update();
+
+                // Table: Environmental Boundaries
+                tTable.textContent = "Environmental Parameter Tolerance Boundaries";
+                bTable.textContent = "4 Continuous Telemetry Channels";
+                sTable.textContent = "Critical sensor thresholds validated by Random Forest split points.";
+                tblHead.innerHTML = `<tr><th>Sensor Indicator</th><th>Unit</th><th>Safe Lower Bound</th><th>Safe Upper Bound</th><th>Critical Decay Trigger</th><th>Model Split Importance</th></tr>`;
+                tblBody.innerHTML = `
+                    <tr><td><strong>Chamber Temperature</strong></td><td>°C</td><td>10.0°C</td><td>24.0°C</td><td class="text-danger fw-bold">&gt; 28.0°C (Cellular Breakdown)</td><td class="text-success fw-bold">22.4%</td></tr>
+                    <tr><td><strong>Relative Humidity</strong></td><td>%</td><td>75.0%</td><td>92.0%</td><td class="text-danger fw-bold">&lt; 65% (Desiccation) / &gt;95% (Mold)</td><td class="text-success fw-bold">16.1%</td></tr>
+                    <tr><td><strong>Lighting Illuminance</strong></td><td>Lux</td><td>0.0 Lux</td><td>25.0 Lux</td><td class="text-danger fw-bold">&gt; 35.0 Lux (Chlorophyll/Senescence)</td><td class="text-success fw-bold">27.8%</td></tr>
+                    <tr><td><strong>Carbon Dioxide (CO₂)</strong></td><td>ppm</td><td>250.0 ppm</td><td>350.0 ppm</td><td class="text-danger fw-bold">&gt; 400.0 ppm (Climacteric Acceleration)</td><td class="text-success fw-bold">33.7%</td></tr>
+                `;
+
+            } else if (view === "stats") {
+                // 3. FRUIT INSIGHTS
+                document.getElementById("tabFruitBtn").className = "btn-tab-pill active";
+                pageSub.textContent = "Comparative biological quality profiles for Tomato, Banana, and Orange produce batches";
+
+                // Donut: Commodity Volume Share
+                tDonut.textContent = "Commodity Volume Share in Dataset";
+                vDonut.textContent = "3 Fruits";
+                vDonut.className = "donut-number-bold text-dark";
+                lDonut.textContent = "8,738 Records Total";
+                legDonut.innerHTML = `<div><span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background: #EF4444;"></span> Tomato (42.8%)</div><div><span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background: #FB923C;"></span> Orange (38.1%)</div><div><span class="d-inline-block rounded-circle me-1" style="width: 10px; height: 10px; background: #FACC15;"></span> Banana (19.1%)</div>`;
+                chartDonutInstance.data.labels = ["Tomato", "Orange", "Banana"];
+                chartDonutInstance.data.datasets[0].data = [42.8, 38.1, 19.1];
+                chartDonutInstance.data.datasets[0].backgroundColor = ["#EF4444", "#FB923C", "#FACC15"];
+                chartDonutInstance.update();
+
+                // Line 1: Tomato Thermal Curve
+                tLine1.textContent = "Tomato Thermal Kinetics Curve";
+                legLine1.innerHTML = `<span style="color: #EF4444; font-weight: 700;">● Tomato Freshness</span>`;
+                chartLine1Instance.data.labels = ["15°C", "18°C", "21°C", "24°C", "27°C", "30°C"];
+                chartLine1Instance.data.datasets[0].label = "Freshness Index";
+                chartLine1Instance.data.datasets[0].data = [65, 88, 95, 86, 42, 10];
+                chartLine1Instance.data.datasets[0].borderColor = "#EF4444";
+                chartLine1Instance.data.datasets[1].label = "Decay Rate";
+                chartLine1Instance.data.datasets[1].data = [35, 12, 5, 14, 58, 90];
+                chartLine1Instance.data.datasets[1].borderColor = "#94A3B8";
+                chartLine1Instance.update();
+
+                // Line 2: Banana & Orange Moisture
+                tLine2.textContent = "Orange & Banana Hydration Response";
+                legLine2.innerHTML = `<span style="color: #FB923C; font-weight: 700;">● Orange</span> <span style="color: #FACC15; font-weight: 700;">● Banana</span>`;
+                chartLine2Instance.data.labels = ["60%", "70%", "80%", "88%", "94%", "98%"];
+                chartLine2Instance.data.datasets[0].label = "Orange Firmness";
+                chartLine2Instance.data.datasets[0].data = [40, 72, 94, 96, 68, 20];
+                chartLine2Instance.data.datasets[0].borderColor = "#FB923C";
+                chartLine2Instance.data.datasets[1].label = "Banana Firmness";
+                chartLine2Instance.data.datasets[1].data = [32, 64, 90, 88, 54, 15];
+                chartLine2Instance.data.datasets[1].borderColor = "#FACC15";
+                chartLine2Instance.update();
+
+                // Bar: Primary Spoilage Cause
+                tBar.textContent = "Primary Spoilage Vector by Commodity (%)";
+                sBar.textContent = "What triggers rapid degradation across each produce commodity.";
+                legBar.innerHTML = `<span style="color: #F97316;">● Gas/Heat Stress</span> <span style="color: #EF4444;">● Light/Mold Decay</span>`;
+                chartBarInstance.data.labels = ["Tomato", "Banana", "Orange"];
+                chartBarInstance.data.datasets = [
+                    { label: "Atmospheric/Heat Stress", data: [28, 56, 24], backgroundColor: "#F97316", borderRadius: 6 },
+                    { label: "Light/Mold Decay", data: [72, 44, 76], backgroundColor: "#EF4444", borderRadius: 6 }
+                ];
+                chartBarInstance.update();
+
+                // Table: Commodity Profiles
+                tTable.textContent = "Produce Commodity Profiles & Storage Benchmarks";
+                bTable.textContent = "3 Commodities Validated";
+                sTable.textContent = "Biological specifications and optimum cold storage requirements.";
+                tblHead.innerHTML = `<tr><th>Commodity</th><th>Scientific Name</th><th>Clean Observations</th><th>Good Quality Rate</th><th>Optimal Temperature</th><th>Optimal Humidity</th><th>Critical Vulnerability</th></tr>`;
+                tblBody.innerHTML = `
+                    <tr><td><strong>🍅 Tomato</strong></td><td><em>Solanum lycopersicum</em></td><td class="fw-bold">3,741</td><td class="text-success fw-bold">62.0%</td><td>18°C - 24°C</td><td>80% - 90%</td><td class="text-danger fw-bold">Light Exposure (&gt;25 Lux)</td></tr>
+                    <tr><td><strong>🍌 Banana</strong></td><td><em>Musa acuminata</em></td><td class="fw-bold">1,667</td><td class="text-success fw-bold">56.0%</td><td>14°C - 20°C</td><td>85% - 92%</td><td class="text-warning fw-bold">CO₂ &amp; Ethylene (&gt;350 ppm)</td></tr>
+                    <tr><td><strong>🍊 Orange</strong></td><td><em>Citrus sinensis</em></td><td class="fw-bold">3,330</td><td class="text-success fw-bold">52.0%</td><td>16°C - 22°C</td><td>85% - 92%</td><td class="text-danger fw-bold">Excess Humidity / Mold (&ge;94.5%)</td></tr>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

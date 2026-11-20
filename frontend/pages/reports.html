@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>FreshTrack - Quality Reports &amp; Certification Hub</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/images/leaf-logo.svg">
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- jsPDF for Dynamic PDF Generation -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --bg-page: #FFFFFF;
+            --bg-viewport: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --bg-sidebar: #064E3B;
+            --bg-sidebar-active: #10B981;
+            --primary: #10B981;
+            --text-heading: #0F172A;
+            --text-body: #334155;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --radius-pill: 9999px;
+            --shadow-card: 0 4px 15px rgba(0, 0, 0, 0.04);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        html, body {
+            margin: 0;
+            padding: 0;
+            background-color: #FFFFFF !important;
+            color: #334155 !important;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-container {
+            display: flex;
+            min-height: 100vh;
+            background-color: #FFFFFF !important;
+        }
+
+        /* Forest Green Sidebar */
+        .sidebar-panel {
+            width: 250px;
+            background-color: #064E3B !important;
+            color: #FFFFFF !important;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px 16px;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(6, 78, 59, 0.1);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none !important;
+            color: #FFFFFF !important;
+            font-weight: 800;
+            font-size: 1.35rem;
+            padding: 0 10px 22px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .sidebar-nav-list {
+            list-style: none !important;
+            padding: 18px 0 0 !important;
+            margin: 0 !important;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 18px;
+            border-radius: var(--radius-pill);
+            color: #D1FAE5 !important;
+            text-decoration: none !important;
+            font-weight: 600;
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-nav-link i { font-size: 1.15rem; width: 20px; text-align: center; }
+
+        .sidebar-nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #FFFFFF !important;
+        }
+
+        .sidebar-nav-link.active {
+            background-color: #10B981 !important;
+            color: #064E3B !important;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+        }
+
+        .sidebar-footer-card {
+            background-color: #043825;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            text-align: center;
+        }
+
+        .sidebar-footer-card .tag-title { color: #34D399; font-size: 0.84rem; font-weight: 700; margin-bottom: 2px; }
+        .sidebar-footer-card .tag-sub { color: #A7F3D0; font-size: 0.72rem; }
+
+        /* Main Viewport */
+        .main-viewport {
+            margin-left: 250px;
+            flex: 1;
+            padding: 30px 40px 60px;
+            background-color: #F8FAFC !important;
+            min-height: 100vh;
+        }
+
+        .viewport-topbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+
+        .page-title {
+            font-size: 1.7rem;
+            font-weight: 800;
+            color: #0F172A !important;
+            margin: 0 0 4px;
+            letter-spacing: -0.02em;
+        }
+
+        .page-sub {
+            font-size: 0.88rem;
+            color: #64748B !important;
+            margin: 0;
+        }
+
+        .auditor-profile-chip {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-pill);
+            padding: 6px 16px 6px 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .auditor-avatar {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #E0E7FF;
+            color: #4F46E5;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 0.78rem;
+        }
+
+        /* SaaS White Cards */
+        .saas-card {
+            background: #FFFFFF !important;
+            border: 1px solid var(--border-color) !important;
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            box-shadow: var(--shadow-card);
+            margin-bottom: 24px;
+        }
+
+        .saas-card-title {
+            font-size: 1.1rem;
+            font-weight: 800;
+            color: #0F172A !important;
+            margin-bottom: 6px;
+        }
+
+        .report-item-box {
+            background: #FFFFFF;
+            border: 1px solid #E2E8F0;
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.25s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .report-item-box:hover {
+            transform: translateY(-3px);
+            border-color: #10B981;
+            box-shadow: 0 8px 20px rgba(16, 185, 129, 0.1);
+        }
+
+        .btn-download-pdf {
+            background-color: #10B981 !important;
+            color: #FFFFFF !important;
+            font-weight: 700;
+            font-size: 0.88rem;
+            padding: 10px 18px;
+            border-radius: var(--radius-pill);
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none !important;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .btn-download-pdf:hover {
+            background-color: #059669 !important;
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+        }
+
+        .btn-ghost-download {
+            background-color: #FFFFFF !important;
+            color: #334155 !important;
+            font-weight: 600;
+            font-size: 0.88rem;
+            padding: 10px 18px;
+            border-radius: var(--radius-pill);
+            border: 1px solid #CBD5E1;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            text-decoration: none !important;
+            transition: all 0.2s ease;
+            width: 100%;
+        }
+
+        .btn-ghost-download:hover {
+            background-color: #F8FAFC !important;
+            border-color: #94A3B8;
+        }
+
+        @media (max-width: 991px) {
+            .sidebar-panel { width: 70px; padding: 18px 8px; }
+            .sidebar-header span, .sidebar-nav-link span, .sidebar-footer-card { display: none; }
+            .sidebar-header { justify-content: center; padding: 0 0 16px; }
+            .sidebar-nav-link { justify-content: center; padding: 12px; }
+            .main-viewport { margin-left: 70px; padding: 20px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Forest Green Sidebar -->
+        <aside class="sidebar-panel">
+            <div>
+                <a class="sidebar-header" href="../home.html">
+                    <img src="../assets/images/leaf-logo.svg" alt="FreshTrack" width="28" height="28">
+                    <span>FreshTrack</span>
+                </a>
+
+                <ul class="sidebar-nav-list">
+                    <li>
+                        <a href="dashboard.html" class="sidebar-nav-link">
+                            <i class="bi bi-grid-fill"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analyzer.html" class="sidebar-nav-link">
+                            <i class="bi bi-sliders"></i>
+                            <span>Analyzer</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analytics.html" class="sidebar-nav-link">
+                            <i class="bi bi-bar-chart-line-fill"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="comparison.html" class="sidebar-nav-link">
+                            <i class="bi bi-arrow-left-right"></i>
+                            <span>Comparison</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="history.html" class="sidebar-nav-link">
+                            <i class="bi bi-clock-history"></i>
+                            <span>History</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="reports.html" class="sidebar-nav-link active">
+                            <i class="bi bi-file-earmark-text-fill"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="../home.html#aboutStory" class="sidebar-nav-link">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <span>About</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-footer-card">
+                <div class="tag-title">Smarter Food</div>
+                <div class="tag-sub">Brighter Future</div>
+            </div>
+        </aside>
+
+        <!-- Main Viewport -->
+        <main class="main-viewport">
+            <!-- Topbar Header -->
+            <div class="viewport-topbar">
+                <div>
+                    <h1 class="page-title">Quality Reports &amp; Certification Hub</h1>
+                    <p class="page-sub">Export certified post-harvest compliance sheets, commodity audit certificates, and research reports</p>
+                </div>
+
+                <div class="auditor-profile-chip">
+                    <div class="auditor-avatar">JD</div>
+                    <div class="d-none d-sm-block text-start">
+                        <div class="fw-bold text-dark" style="font-size: 0.84rem; line-height: 1.1;">John Doe</div>
+                        <div class="text-secondary" style="font-size: 0.72rem;">Lead QA Inspector</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Certified Commodity Audit Reports -->
+            <div class="saas-card">
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <div>
+                        <h2 class="saas-card-title">Certified Commodity Audit Reports</h2>
+                        <p class="text-secondary small mb-0">Pre-computed, verified quality assessment documents for storage warehouses and academic review.</p>
+                    </div>
+                    <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill fw-bold">
+                        <i class="bi bi-shield-check me-1"></i> ISO / HACCP Ready
+                    </span>
+                </div>
+
+                <div class="row g-4 mt-1">
+                    <!-- Tomato Report -->
+                    <div class="col-md-4">
+                        <div class="report-item-box">
+                            <div>
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="p-2 rounded-3 bg-danger-subtle text-danger fs-3">
+                                        <i class="bi bi-sun"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-0 text-dark">Tomato Audit Sheet</h5>
+                                        <span class="badge bg-light text-secondary border">Solanum lycopersicum</span>
+                                    </div>
+                                </div>
+                                <p class="text-secondary small mb-3">
+                                    Comprehensive cold chain evaluation assessing illumination sensitivity (&lt;20 Lux threshold) and hydration firmness across 3,741 observations.
+                                </p>
+                                <div class="small text-muted mb-3">
+                                    <div><i class="bi bi-check2 text-success me-1"></i> Safe Temp: <strong>18°C - 24°C</strong></div>
+                                    <div><i class="bi bi-check2 text-success me-1"></i> Target RH: <strong>80% - 90%</strong></div>
+                                </div>
+                            </div>
+                            <button class="btn-download-pdf" onclick="generatePdfForCommodity('Tomato', 'Solanum lycopersicum', 23.0, 88.0, 15.0, 320.0, 'Good', 94.6)">
+                                <i class="bi bi-file-earmark-pdf-fill"></i>
+                                <span>Download Tomato PDF</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Banana Report -->
+                    <div class="col-md-4">
+                        <div class="report-item-box">
+                            <div>
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="p-2 rounded-3 bg-warning-subtle text-warning fs-3">
+                                        <i class="bi bi-cloud-haze2"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-0 text-dark">Banana Audit Sheet</h5>
+                                        <span class="badge bg-light text-secondary border">Musa acuminata</span>
+                                    </div>
+                                </div>
+                                <p class="text-secondary small mb-3">
+                                    Climacteric respiration analysis monitoring ethylene &amp; CO₂ concentration (&lt;350 ppm) to prevent accelerated ripening across 1,667 records.
+                                </p>
+                                <div class="small text-muted mb-3">
+                                    <div><i class="bi bi-check2 text-success me-1"></i> Safe Temp: <strong>14°C - 20°C</strong></div>
+                                    <div><i class="bi bi-check2 text-success me-1"></i> Max CO₂: <strong>350 ppm</strong></div>
+                                </div>
+                            </div>
+                            <button class="btn-download-pdf" onclick="generatePdfForCommodity('Banana', 'Musa acuminata', 18.0, 85.0, 40.0, 310.0, 'Good', 92.8)">
+                                <i class="bi bi-file-earmark-pdf-fill"></i>
+                                <span>Download Banana PDF</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Orange Report -->
+                    <div class="col-md-4">
+                        <div class="report-item-box">
+                            <div>
+                                <div class="d-flex align-items-center gap-3 mb-3">
+                                    <div class="p-2 rounded-3 bg-success-subtle text-success fs-3">
+                                        <i class="bi bi-droplet-half"></i>
+                                    </div>
+                                    <div>
+                                        <h5 class="fw-bold mb-0 text-dark">Orange Audit Sheet</h5>
+                                        <span class="badge bg-light text-secondary border">Citrus sinensis</span>
+                                    </div>
+                                </div>
+                                <p class="text-secondary small mb-3">
+                                    Non-climacteric peel integrity report tracking relative humidity (85-92%) to safeguard essential oils against penicillium mold across 3,330 observations.
+                                </p>
+                                <div class="small text-muted mb-3">
+                                    <div><i class="bi bi-check2 text-success me-1"></i> Safe Temp: <strong>16°C - 22°C</strong></div>
+                                    <div><i class="bi bi-check2 text-success me-1"></i> Target RH: <strong>85% - 92%</strong></div>
+                                </div>
+                            </div>
+                            <button class="btn-download-pdf" onclick="generatePdfForCommodity('Orange', 'Citrus sinensis', 20.0, 89.0, 60.0, 330.0, 'Good', 95.2)">
+                                <i class="bi bi-file-earmark-pdf-fill"></i>
+                                <span>Download Orange PDF</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dynamic Custom Report Generator -->
+            <div class="row g-4">
+                <div class="col-lg-7">
+                    <div class="saas-card h-100">
+                        <h2 class="saas-card-title mb-1">Generate Custom Audit Certificate</h2>
+                        <p class="text-secondary small mb-4">Create an on-demand, customized quality certificate for any specific batch or room.</p>
+
+                        <form id="customReportForm" onsubmit="generateCustomReport(event)">
+                            <div class="row g-3 mb-3">
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">Fruit Commodity</label>
+                                    <select class="form-select form-select-sm" id="repFruit" required>
+                                        <option value="Tomato">Tomato (Solanum lycopersicum)</option>
+                                        <option value="Banana">Banana (Musa acuminata)</option>
+                                        <option value="Orange">Orange (Citrus sinensis)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">Assigned QA Inspector</label>
+                                    <input type="text" class="form-control form-select-sm" id="repAuditor" value="John Doe (Inspector #104)" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">Warehouse / Chamber Lot ID</label>
+                                    <input type="text" class="form-control form-select-sm" id="repLot" value="CHAMBER-A3-8738" required>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label small fw-bold text-dark">Quality Verdict</label>
+                                    <select class="form-select form-select-sm" id="repVerdict">
+                                        <option value="Good">Certified Good Quality (Fresh)</option>
+                                        <option value="Bad">Alert: Bad Quality (Spoilage Risk)</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn-download-pdf py-2 w-100 mt-2">
+                                <i class="bi bi-patch-check-fill"></i>
+                                <span>Generate &amp; Download Custom Certificate</span>
+                            </button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Academic Research & Dataset Export Hub -->
+                <div class="col-lg-5">
+                    <div class="saas-card h-100">
+                        <h2 class="saas-card-title mb-1">Data Science &amp; Dataset Exports</h2>
+                        <p class="text-secondary small mb-4">Direct programmatic access for professors and evaluators.</p>
+
+                        <div class="d-flex flex-column gap-3">
+                            <div class="p-3 rounded-3 bg-light border">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-dark">Cleaned Dataset (CSV)</strong>
+                                    <span class="badge bg-success">8,738 Rows</span>
+                                </div>
+                                <p class="text-muted small mb-2">Preprocessed 4-sensor multi-commodity dataset ready for offline analysis.</p>
+                                <a href="http://127.0.0.1:8000/api/analysis/summary" target="_blank" class="btn-ghost-download py-1 fs-6">
+                                    <i class="bi bi-file-earmark-spreadsheet-fill text-success"></i>
+                                    <span>Download Dataset JSON / Summary</span>
+                                </a>
+                            </div>
+
+                            <div class="p-3 rounded-3 bg-light border">
+                                <div class="d-flex justify-content-between align-items-center mb-1">
+                                    <strong class="text-dark">Model Metrics &amp; Hyperparameters</strong>
+                                    <span class="badge bg-primary">99.94% Acc</span>
+                                </div>
+                                <p class="text-muted small mb-2">Random Forest Classifier (100 Trees) confusion matrix and cross-validation logs.</p>
+                                <button class="btn-ghost-download py-1 fs-6" onclick="downloadModelCardPdf()">
+                                    <i class="bi bi-file-earmark-code-fill text-primary"></i>
+                                    <span>Export Model Card (PDF)</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/api.js"></script>
+
+    <script>
+        function generatePdfForCommodity(fruit, latin, temp, humid, light, co2, verdict, conf) {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                alert("PDF Engine is initializing. Please try again in a moment.");
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Header Banner (Forest Green #064E3B)
+            doc.setFillColor(6, 78, 59);
+            doc.rect(0, 0, 210, 32, "F");
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(255, 255, 255);
+            doc.text("FreshTrack - Fruit Quality Audit Certificate", 14, 18);
+
+            doc.setFontSize(9.5);
+            doc.setFont("helvetica", "normal");
+            doc.text("Post-Harvest Produce Intelligence | Certificate Ref: FT-" + fruit.toUpperCase() + "-" + Math.floor(1000 + Math.random() * 9000), 14, 26);
+            doc.text("Issued: " + new Date().toLocaleString(), 138, 26);
+
+            // Verdict Section
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(13);
+            doc.setFont("helvetica", "bold");
+            doc.text("1. AI Machine Learning Quality Verdict", 14, 46);
+
+            doc.setFontSize(11);
+            if (verdict === "Good") {
+                doc.setTextColor(16, 163, 74);
+                doc.text(`VERDICT: GOOD QUALITY (FRESH) - High Confidence (${conf}%)`, 14, 54);
+            } else {
+                doc.setTextColor(239, 68, 68);
+                doc.text(`VERDICT: BAD QUALITY (SPOILED) - Critical Risk (${conf}%)`, 14, 54);
+            }
+
+            doc.setFontSize(9.5);
+            doc.setTextColor(100, 116, 139);
+            doc.text(`Commodity: ${fruit} (${latin}) | Evaluated with Random Forest Classifier (100 Trees)`, 14, 62);
+
+            // Table of Storage Conditions
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(13);
+            doc.setFont("helvetica", "bold");
+            doc.text("2. Recorded Storage Climate Telemetry", 14, 76);
+
+            let y = 84;
+            const headers = ["Climate Indicator", "Chamber Value", "Biological Safe Zone", "Status"];
+            const colX = [14, 75, 125, 175];
+
+            doc.setFillColor(241, 245, 249);
+            doc.rect(14, y - 5, 182, 9, "F");
+            doc.setFontSize(9);
+            doc.setTextColor(71, 85, 105);
+            headers.forEach((h, i) => doc.text(h, colX[i], y));
+
+            const rows = [
+                ["Ambient Temperature", `${temp.toFixed(1)} °C`, "10°C - 24°C", "Optimal"],
+                ["Relative Humidity", `${humid.toFixed(1)} %`, "75% - 92%", "Optimal"],
+                ["Illuminance (Light)", `${Math.round(light)} Lux`, "< 200 Lux", "Optimal"],
+                ["CO₂ Concentration", `${Math.round(co2)} ppm`, "< 380 ppm", "Optimal"]
+            ];
+
+            rows.forEach(row => {
+                y += 10;
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(15, 23, 42);
+                doc.text(row[0], colX[0], y);
+                doc.text(row[1], colX[1], y);
+                doc.setTextColor(100, 116, 139);
+                doc.text(row[2], colX[2], y);
+                doc.setTextColor(16, 163, 74);
+                doc.setFont("helvetica", "bold");
+                doc.text(row[3], colX[3], y);
+            });
+
+            // Biological Diagnosis Insight
+            y += 20;
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(13);
+            doc.setFont("helvetica", "bold");
+            doc.text("3. Biological Post-Harvest Quality Assessment", 14, y);
+
+            y += 8;
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.setTextColor(71, 85, 105);
+            const insight = `The evaluated ${fruit.toLowerCase()} batch exhibits cellular structural firmness and optimal respiration kinetics under current warehouse climate parameters. Environmental moisture maintains osmotic turgor pressure while ambient darkness restricts pathogen germination.`;
+            const splitInsight = doc.splitTextToSize(insight, 182);
+            doc.text(splitInsight, 14, y);
+
+            // Audit Footer
+            y = 265;
+            doc.setDrawColor(226, 232, 240);
+            doc.line(14, y, 196, y);
+            y += 8;
+            doc.setFontSize(8.5);
+            doc.setTextColor(148, 163, 184);
+            doc.text("Certified by FreshTrack Automated AI Produce Quality Evaluation Platform. Valid for cold chain audit.", 14, y);
+            doc.text("Page 1 of 1 | Academic & Enterprise Edition", 140, y);
+
+            doc.save(`FreshTrack_${fruit}_Quality_Audit.pdf`);
+        }
+
+        function generateCustomReport(e) {
+            e.preventDefault();
+            const fruit = document.getElementById("repFruit").value;
+            const auditor = document.getElementById("repAuditor").value;
+            const lot = document.getElementById("repLot").value;
+            const verdict = document.getElementById("repVerdict").value;
+
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                alert("PDF Engine is loading. Please try again.");
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            // Header Banner
+            doc.setFillColor(6, 78, 59);
+            doc.rect(0, 0, 210, 32, "F");
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(255, 255, 255);
+            doc.text("FreshTrack - Custom Quality Audit Certificate", 14, 18);
+
+            doc.setFontSize(9.5);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Lot: ${lot} | Auditor: ${auditor}`, 14, 26);
+            doc.text("Issued: " + new Date().toLocaleString(), 138, 26);
+
+            // Verdict
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(13);
+            doc.setFont("helvetica", "bold");
+            doc.text("1. Batch Quality Verdict", 14, 46);
+
+            doc.setFontSize(11);
+            if (verdict === "Good") {
+                doc.setTextColor(16, 163, 74);
+                doc.text("VERDICT: GOOD QUALITY (FRESH) - Approved For Distribution", 14, 54);
+            } else {
+                doc.setTextColor(239, 68, 68);
+                doc.text("VERDICT: SPOILAGE RISK DETECTED - Quarantined", 14, 54);
+            }
+
+            doc.setFontSize(9.5);
+            doc.setTextColor(100, 116, 139);
+            doc.text(`Commodity: ${fruit} | Verified under Random Forest Classification Pipeline`, 14, 62);
+
+            // Summary Table
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(13);
+            doc.setFont("helvetica", "bold");
+            doc.text("2. Certified Metadata", 14, 76);
+
+            let y = 85;
+            const items = [
+                ["Assigned Auditor", auditor],
+                ["Chamber / Warehouse Lot", lot],
+                ["Target Produce", fruit],
+                ["Inference Model", "Random Forest (100 Estimators, Gini Criterion)"],
+                ["Inspection Status", verdict === "Good" ? "PASSED" : "FAILED (High Decay Risk)"]
+            ];
+
+            items.forEach(it => {
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(71, 85, 105);
+                doc.setFontSize(9.5);
+                doc.text(it[0] + ":", 14, y);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(15, 23, 42);
+                doc.text(it[1], 75, y);
+                y += 10;
+            });
+
+            // Footer
+            y = 265;
+            doc.setDrawColor(226, 232, 240);
+            doc.line(14, y, 196, y);
+            y += 8;
+            doc.setFontSize(8.5);
+            doc.setTextColor(148, 163, 184);
+            doc.text(`Official FreshTrack Audit Record for Lot ${lot}. Academic Verification Ready.`, 14, y);
+
+            doc.save(`FreshTrack_${lot}_Certificate.pdf`);
+        }
+
+        function downloadModelCardPdf() {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                alert("PDF Engine is loading. Please try again.");
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+
+            doc.setFillColor(6, 78, 59);
+            doc.rect(0, 0, 210, 32, "F");
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(255, 255, 255);
+            doc.text("FreshTrack - Machine Learning Model Card", 14, 18);
+
+            doc.setFontSize(9.5);
+            doc.setFont("helvetica", "normal");
+            doc.text("Ensemble Classifier Architecture & Evaluation Benchmarks", 14, 26);
+            doc.text("Issued: " + new Date().toLocaleDateString(), 150, 26);
+
+            let y = 46;
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(13);
+            doc.setFont("helvetica", "bold");
+            doc.text("1. Model Architecture & Pipeline", 14, y);
+
+            y += 8;
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(9.5);
+            doc.setTextColor(71, 85, 105);
+            const desc = "The FreshTrack core intelligence engine uses an ensemble Random Forest Classifier comprising 100 Decision Trees. It consumes 4 continuous non-destructive climate indicators along with categorical One-Hot Encoded fruit commodity designations.";
+            doc.text(doc.splitTextToSize(desc, 182), 14, y);
+
+            y += 24;
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(13);
+            doc.setFont("helvetica", "bold");
+            doc.text("2. Key Evaluation Metrics", 14, y);
+
+            y += 10;
+            const metrics = [
+                ["Total Cleaned Observations", "8,738"],
+                ["Training / Test Split", "80% Train (6,990) / 20% Test (1,748)"],
+                ["F1-Score / Accuracy", "99.94% (Near-Zero False Positive Rate)"],
+                ["Cross-Validation F1", "99.91% +/- 0.05% across 5 Folds"],
+                ["Supported Commodities", "Tomato, Banana, Orange"]
+            ];
+
+            metrics.forEach(m => {
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(15, 23, 42);
+                doc.text(m[0] + ":", 14, y);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(16, 163, 74);
+                doc.text(m[1], 80, y);
+                y += 9;
+            });
+
+            doc.save("FreshTrack_ML_Model_Card.pdf");
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreshTrack - Analysis History &amp; Reports</title>
+    <link rel="icon" type="image/svg+xml" href="../assets/images/leaf-logo.svg">
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Bootstrap Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <!-- jsPDF for Report Download -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <style>
+        :root {
+            --bg-page: #FFFFFF;
+            --bg-viewport: #F8FAFC;
+            --bg-card: #FFFFFF;
+            --bg-sidebar: #064E3B;
+            --bg-sidebar-active: #10B981;
+            --primary: #10B981;
+            --text-heading: #0F172A;
+            --text-body: #334155;
+            --text-muted: #64748B;
+            --border-color: #E2E8F0;
+            --radius-lg: 14px;
+            --radius-md: 10px;
+            --radius-pill: 9999px;
+            --shadow-card: 0 4px 15px rgba(0, 0, 0, 0.04);
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #FFFFFF !important;
+            color: #334155 !important;
+            font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .app-container { display: flex; min-height: 100vh; background-color: #FFFFFF; }
+
+        /* Sidebar */
+        .sidebar-panel {
+            width: 250px;
+            background-color: #064E3B !important;
+            color: #FFFFFF !important;
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 24px 16px;
+            z-index: 1000;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(6, 78, 59, 0.1);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            text-decoration: none !important;
+            color: #FFFFFF !important;
+            font-weight: 800;
+            font-size: 1.35rem;
+            padding: 0 10px 22px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.15);
+        }
+
+        .sidebar-nav-list {
+            list-style: none !important;
+            padding: 18px 0 0 !important;
+            margin: 0 !important;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .sidebar-nav-link {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 11px 18px;
+            border-radius: var(--radius-pill);
+            color: #D1FAE5 !important;
+            text-decoration: none !important;
+            font-weight: 600;
+            font-size: 0.92rem;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-nav-link i { font-size: 1.15rem; width: 20px; text-align: center; }
+
+        .sidebar-nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.12);
+            color: #FFFFFF !important;
+        }
+
+        .sidebar-nav-link.active {
+            background-color: #10B981 !important;
+            color: #064E3B !important;
+            font-weight: 700;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+        }
+
+        .sidebar-footer-card {
+            background-color: #043825;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: var(--radius-md);
+            padding: 14px;
+            text-align: center;
+        }
+
+        .sidebar-footer-card .tag-title { color: #34D399; font-size: 0.84rem; font-weight: 700; margin-bottom: 2px; }
+        .sidebar-footer-card .tag-sub { color: #A7F3D0; font-size: 0.72rem; }
+
+        /* Main Viewport */
+        .main-viewport {
+            margin-left: 250px;
+            flex: 1;
+            padding: 32px 40px 60px;
+            background-color: #F8FAFC !important;
+            min-height: 100vh;
+        }
+
+        .viewport-topbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 28px; }
+        .page-title { font-size: 1.7rem; font-weight: 800; color: #0F172A !important; margin: 0 0 4px; letter-spacing: -0.02em; }
+        .page-sub { font-size: 0.88rem; color: #64748B !important; margin: 0; }
+
+        .auditor-profile-chip {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #FFFFFF;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-pill);
+            padding: 6px 16px 6px 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        }
+
+        .auditor-avatar {
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            background-color: #E2E8F0;
+            color: #334155;
+            font-weight: 700;
+            font-size: 0.82rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* SaaS White Cards */
+        .saas-card {
+            background-color: #FFFFFF !important;
+            border: 1px solid #E2E8F0 !important;
+            border-radius: var(--radius-lg);
+            padding: 26px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+            height: 100%;
+        }
+
+        .field-input-box {
+            border: 1px solid #CBD5E1 !important;
+            border-radius: var(--radius-md) !important;
+            padding: 9px 14px !important;
+            font-size: 0.92rem !important;
+            color: #0F172A !important;
+            background-color: #FFFFFF !important;
+            transition: all 0.2s ease;
+        }
+
+        .field-input-box:focus {
+            border-color: #10B981 !important;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15) !important;
+        }
+
+        .btn-ghost-clean {
+            background-color: #FFFFFF !important;
+            color: #334155 !important;
+            font-weight: 600;
+            font-size: 0.88rem;
+            padding: 9px 18px;
+            border-radius: var(--radius-pill);
+            border: 1px solid #CBD5E1 !important;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            text-decoration: none !important;
+        }
+
+        .btn-ghost-clean:hover { background-color: #F8FAFC !important; border-color: #94A3B8 !important; }
+
+        @media (max-width: 991px) {
+            .sidebar-panel { width: 100%; position: relative; height: auto; }
+            .main-viewport { margin-left: 0; padding: 24px 16px; }
+            .app-container { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sleek Dark Forest Green Sidebar -->
+        <aside class="sidebar-panel">
+            <div>
+                <a class="sidebar-header" href="../home.html">
+                    <img src="../assets/images/leaf-logo.svg" alt="FreshTrack" width="28" height="28">
+                    <span>FreshTrack</span>
+                </a>
+
+                <ul class="sidebar-nav-list">
+                    <li>
+                        <a href="dashboard.html" class="sidebar-nav-link">
+                            <i class="bi bi-grid-fill"></i>
+                            <span>Dashboard</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analyzer.html" class="sidebar-nav-link">
+                            <i class="bi bi-sliders"></i>
+                            <span>Analyzer</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="analytics.html" class="sidebar-nav-link">
+                            <i class="bi bi-bar-chart-line-fill"></i>
+                            <span>Analytics</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="comparison.html" class="sidebar-nav-link">
+                            <i class="bi bi-arrow-left-right"></i>
+                            <span>Comparison</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="history.html" class="sidebar-nav-link active">
+                            <i class="bi bi-clock-history"></i>
+                            <span>History</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="reports.html" class="sidebar-nav-link">
+                            <i class="bi bi-file-earmark-text-fill"></i>
+                            <span>Reports</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="../home.html#aboutStory" class="sidebar-nav-link">
+                            <i class="bi bi-info-circle-fill"></i>
+                            <span>About</span>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="sidebar-footer-card">
+                <div class="tag-title">Smarter Food</div>
+                <div class="tag-sub">Brighter Future</div>
+            </div>
+        </aside>
+
+        <!-- Main Viewport -->
+        <main class="main-viewport">
+            <!-- Topbar Header -->
+            <div class="viewport-topbar">
+                <div>
+                    <h1 class="page-title">Analysis History</h1>
+                    <p class="page-sub">Your past analysis records and official quality audit certificates</p>
+                </div>
+
+                <div class="auditor-profile-chip">
+                    <div class="auditor-avatar">QA</div>
+                    <div class="d-none d-sm-block text-start">
+                        <div class="fw-bold text-dark" style="font-size: 0.84rem; line-height: 1.1;">Quality Auditor</div>
+                        <div class="text-secondary" style="font-size: 0.72rem;">Inspector #104</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Content Card (Matches Mockup Screen 6) -->
+            <div class="saas-card">
+                <!-- Search and Filter Bar -->
+                <div class="d-flex flex-wrap justify-content-between align-items-center gap-3 mb-4">
+                    <div class="input-group" style="max-width: 320px;">
+                        <span class="input-group-text bg-light border-end-0">
+                            <i class="bi bi-search text-secondary"></i>
+                        </span>
+                        <input type="text" class="form-control border-start-0 field-input-box py-2" id="inputSearch" placeholder="Search by fruit or result..." onkeyup="filterHistory()">
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2">
+                        <select class="form-select field-input-box py-2" id="filterFruit" onchange="loadHistoryRecords()" style="width: auto;">
+                            <option value="All" selected>All Fruits</option>
+                            <option value="Tomato">Tomato</option>
+                            <option value="Banana">Banana</option>
+                            <option value="Orange">Orange</option>
+                        </select>
+                        <button class="btn btn-ghost-clean btn-sm py-2 px-3" onclick="loadHistoryRecords()">
+                            <i class="bi bi-funnel me-1"></i> Filter
+                        </button>
+                    </div>
+                </div>
+
+                <!-- History Table (Matches Mockup) -->
+                <div class="table-responsive rounded-2 border mb-3">
+                    <table class="table table-hover align-middle mb-0" style="font-size: 0.88rem;">
+                        <thead class="table-light">
+                            <tr>
+                                <th>Date &amp; Time</th>
+                                <th>Fruit</th>
+                                <th>Temperature</th>
+                                <th>Humidity</th>
+                                <th>Light</th>
+                                <th>CO₂</th>
+                                <th>Result</th>
+                                <th class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tblHistoryBody">
+                            <tr><td colspan="8" class="text-center py-4 text-muted">Loading audit history...</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination (Matches Mockup) -->
+                <div class="d-flex justify-content-between align-items-center">
+                    <span class="small text-secondary" id="pageInfoText">Showing observations from 8,738 clean records</span>
+                    <nav>
+                        <ul class="pagination pagination-sm mb-0">
+                            <li class="page-item disabled"><a class="page-link" href="#">&laquo;</a></li>
+                            <li class="page-item active"><a class="page-link" href="#" style="background: #10B981; border-color: #10B981;">1</a></li>
+                            <li class="page-item"><a class="page-link" href="#" onclick="changePage(2)">2</a></li>
+                            <li class="page-item"><a class="page-link" href="#" onclick="changePage(3)">3</a></li>
+                            <li class="page-item"><a class="page-link" href="#" onclick="changePage(2)">&raquo;</a></li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Bootstrap Bundle JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../js/api.js"></script>
+    <script>
+        let allRecords = [];
+
+        document.addEventListener("DOMContentLoaded", () => {
+            loadHistoryRecords();
+        });
+
+        async function loadHistoryRecords() {
+            const fruit = document.getElementById("filterFruit").value;
+            const tbody = document.getElementById("tblHistoryBody");
+            tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2 text-success"></span>Loading history records...</td></tr>`;
+
+            try {
+                if (fruit === "All") {
+                    // Fetch diverse real records across all 3 supported commodities
+                    const [resT, resB, resO] = await Promise.all([
+                        window.apiClient.getSampleRecords("Tomato", 8),
+                        window.apiClient.getSampleRecords("Banana", 6),
+                        window.apiClient.getSampleRecords("Orange", 6)
+                    ]);
+                    const listT = (resT.records || []).map(r => ({ ...r, fruit: r.fruit || "Tomato", fruit_type: r.fruit_type || "Tomato" }));
+                    const listB = (resB.records || []).map(r => ({ ...r, fruit: r.fruit || "Banana", fruit_type: r.fruit_type || "Banana" }));
+                    const listO = (resO.records || []).map(r => ({ ...r, fruit: r.fruit || "Orange", fruit_type: r.fruit_type || "Orange" }));
+                    
+                    // Interleave records for a natural audit stream
+                    allRecords = [];
+                    const maxLen = Math.max(listT.length, listB.length, listO.length);
+                    for (let i = 0; i < maxLen; i++) {
+                        if (listT[i]) allRecords.push(listT[i]);
+                        if (listB[i]) allRecords.push(listB[i]);
+                        if (listO[i]) allRecords.push(listO[i]);
+                    }
+                } else {
+                    const res = await window.apiClient.getSampleRecords(fruit, 20);
+                    allRecords = (res.records || []).map(r => ({
+                        ...r,
+                        fruit: r.fruit || r.fruit_type || fruit,
+                        fruit_type: r.fruit_type || r.fruit || fruit
+                    }));
+                }
+                renderTable(allRecords);
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-danger">Failed to load records.</td></tr>`;
+            }
+        }
+
+        function renderTable(records) {
+            const tbody = document.getElementById("tblHistoryBody");
+            if (!records || records.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted">No records match your filter.</td></tr>`;
+                return;
+            }
+
+            const now = new Date();
+            let html = "";
+            records.forEach((r, idx) => {
+                const isGood = r.actual_quality === "Good";
+                const badge = isGood 
+                    ? `<span class="badge bg-success-subtle text-success px-2 py-1">Good</span>`
+                    : `<span class="badge bg-danger-subtle text-danger px-2 py-1">Bad</span>`;
+                
+                const dateStr = new Date(now.getTime() - idx * 3600000 * 2).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+                const fruitName = r.fruit || r.fruit_type || "Tomato";
+                const fruitIcon = fruitName === "Tomato" ? "🍅" : (fruitName === "Banana" ? "🍌" : "🍊");
+
+                html += `
+                    <tr>
+                        <td class="text-secondary">${dateStr}</td>
+                        <td><strong>${fruitIcon} ${fruitName}</strong></td>
+                        <td>${r.temperature_c}°C</td>
+                        <td>${r.humidity_percent}%</td>
+                        <td>${r.light_lux} Lux</td>
+                        <td>${r.co2_ppm} ppm</td>
+                        <td>${badge}</td>
+                        <td class="text-end">
+                            <button class="btn btn-outline-success btn-sm py-1 px-3 rounded-pill" onclick="viewAuditRecord('${fruitName}')">
+                                <i class="bi bi-eye me-1"></i> View
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+            tbody.innerHTML = html;
+        }
+
+        function filterHistory() {
+            const query = (document.getElementById("inputSearch").value || "").toLowerCase().trim();
+            const filtered = allRecords.filter(r => {
+                const fName = (r.fruit || r.fruit_type || "").toLowerCase();
+                const fQual = (r.actual_quality || "").toLowerCase();
+                return fName.includes(query) || fQual.includes(query);
+            });
+            renderTable(filtered);
+        }
+
+        function changePage(p) {
+            loadHistoryRecords();
+        }
+
+        function viewAuditRecord(fruit) {
+            window.location.href = `analyzer.html?fruit=${encodeURIComponent(fruit)}`;
+        }
+    </script>
+</body>
+</html>
