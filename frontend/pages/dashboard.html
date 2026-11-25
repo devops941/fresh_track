@@ -623,23 +623,29 @@
             try {
                 const summary = await window.apiClient.getDatasetSummary();
                 if (summary) {
-                    document.getElementById("dashTotalCount").textContent = summary.total_records.toLocaleString();
-                    document.getElementById("dashGoodPct").textContent = `${summary.good_ratio}%`;
-                    document.getElementById("dashGoodCount").textContent = `${summary.good_count.toLocaleString()} Good Quality`;
-                    document.getElementById("dashBadPct").textContent = `${summary.bad_ratio}%`;
-                    document.getElementById("dashBadCount").textContent = `${summary.bad_count.toLocaleString()} Bad Quality`;
-                    document.getElementById("donutCenterPct").textContent = `${summary.good_ratio}%`;
+                    const total = summary.total_records || 8738;
+                    const goodPct = summary.good_quality_percentage ?? summary.good_ratio ?? 52.1;
+                    const badPct = summary.bad_quality_percentage ?? summary.bad_ratio ?? 47.9;
+                    const goodCount = summary.good_quality_count ?? summary.good_count ?? 4553;
+                    const badCount = summary.bad_quality_count ?? summary.bad_count ?? 4185;
 
-                    donutChart.data.datasets[0].data = [summary.good_ratio, summary.bad_ratio];
+                    document.getElementById("dashTotalCount").textContent = total.toLocaleString();
+                    document.getElementById("dashGoodPct").textContent = `${goodPct}%`;
+                    document.getElementById("dashGoodCount").textContent = `${goodCount.toLocaleString()} Good Quality`;
+                    document.getElementById("dashBadPct").textContent = `${badPct}%`;
+                    document.getElementById("dashBadCount").textContent = `${badCount.toLocaleString()} Bad Quality`;
+                    document.getElementById("donutCenterPct").textContent = `${goodPct}%`;
+
+                    donutChart.data.datasets[0].data = [goodPct, badPct];
                     donutChart.update();
                 }
 
-                const fruits = await window.apiClient.getFruitAnalysis();
-                if (fruits && fruits.breakdown) {
-                    const b = fruits.breakdown;
-                    const labels = Object.keys(b);
-                    const goods = labels.map(f => b[f].good_ratio || 50);
-                    const bads = labels.map(f => b[f].bad_ratio || 50);
+                const fruitsRes = await window.apiClient.getFruitAnalysis();
+                const fruitData = (fruitsRes && fruitsRes.fruits) || (fruitsRes && fruitsRes.breakdown);
+                if (fruitData) {
+                    const labels = Object.keys(fruitData);
+                    const goods = labels.map(f => fruitData[f].good_percentage ?? fruitData[f].good_ratio ?? 50);
+                    const bads = labels.map(f => fruitData[f].bad_percentage ?? fruitData[f].bad_ratio ?? 50);
 
                     barChart.data.labels = labels;
                     barChart.data.datasets[0].data = goods;

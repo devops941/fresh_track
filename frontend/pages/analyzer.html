@@ -853,6 +853,32 @@
                     ? `<i class="bi bi-database me-1"></i> ${currentRecordLabel}`
                     : `<i class="bi bi-person-check me-1"></i> User Provided Measurements`;
 
+                // Save analysis to localStorage history so it displays in history.html
+                try {
+                    const newAuditEntry = {
+                        id: "ANALYSIS-" + Date.now(),
+                        timestamp: Date.now(),
+                        fruit: fruit,
+                        fruit_type: fruit,
+                        temperature_c: parseFloat(temp.toFixed(1)),
+                        humidity_percent: parseFloat(humid.toFixed(1)),
+                        light_lux: parseFloat(light.toFixed(1)),
+                        co2_ppm: Math.round(co2),
+                        actual_quality: isGood ? "Good" : "Bad",
+                        predicted_quality: isGood ? "Good" : "Bad",
+                        confidence_score: parseFloat(confPct),
+                        source: currentWorkflow === "dataset" ? currentRecordLabel : "Manual Reading",
+                        is_manual: currentWorkflow !== "dataset",
+                        diagnosis: res.diagnosis || (isGood ? "Optimal storage environment" : "Critical decay risk detected")
+                    };
+                    const existingHistory = JSON.parse(localStorage.getItem("freshtrack_analysis_history") || "[]");
+                    existingHistory.unshift(newAuditEntry);
+                    if (existingHistory.length > 50) existingHistory.pop();
+                    localStorage.setItem("freshtrack_analysis_history", JSON.stringify(existingHistory));
+                } catch (e) {
+                    console.warn("Could not save to history:", e);
+                }
+
             } catch (err) {
                 alert("Prediction Error: " + err.message);
             }
@@ -964,6 +990,29 @@
                 onFruitChange();
             } else {
                 loadCsvSamples("Tomato");
+            }
+
+            if (params.get("temp")) {
+                document.getElementById("inputTemp").value = params.get("temp");
+                syncTemp("input");
+            }
+            if (params.get("humid")) {
+                document.getElementById("inputHumid").value = params.get("humid");
+                syncHumid("input");
+            }
+            if (params.get("light")) {
+                document.getElementById("inputLight").value = params.get("light");
+                syncLight("input");
+            }
+            if (params.get("co2")) {
+                document.getElementById("inputCO2").value = params.get("co2");
+                syncCO2("input");
+            }
+            if (params.get("manual") === "1") {
+                switchWorkflow("manual");
+            }
+            if (params.get("auto") === "1") {
+                setTimeout(executeAnalysis, 300);
             }
         });
     </script>

@@ -8,6 +8,10 @@ class DatasetSummaryResponse(BaseModel):
     bad_quality_count: int = Field(..., example=4185, description="Total Bad quality observations")
     good_quality_percentage: float = Field(..., example=52.11, description="Percentage of Good quality observations")
     bad_quality_percentage: float = Field(..., example=47.89, description="Percentage of Bad quality observations")
+    good_ratio: float = Field(52.11, description="Alias for good_quality_percentage")
+    bad_ratio: float = Field(47.89, description="Alias for bad_quality_percentage")
+    good_count: int = Field(4553, description="Alias for good_quality_count")
+    bad_count: int = Field(4185, description="Alias for bad_quality_count")
 
 class FruitQualityItem(BaseModel):
     total: int = Field(..., description="Total observations for this commodity")
@@ -18,6 +22,7 @@ class FruitQualityItem(BaseModel):
 
 class FruitAnalysisResponse(BaseModel):
     fruits: Dict[str, FruitQualityItem] = Field(..., description="Quality distribution cross-tabulated per fruit commodity")
+    breakdown: Dict[str, Any] = Field(default_factory=dict, description="Alias for fruits breakdown")
     summary: str = Field(..., description="High-level analytical summary of commodity distributions")
 
 class EnvironmentalMetric(BaseModel):

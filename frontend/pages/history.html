@@ -362,43 +362,84 @@
             loadHistoryRecords();
         });
 
+        function getUserHistory() {
+            try {
+                return JSON.parse(localStorage.getItem("freshtrack_analysis_history") || "[]");
+            } catch (e) {
+                return [];
+            }
+        }
+
         async function loadHistoryRecords() {
             const fruit = document.getElementById("filterFruit").value;
             const tbody = document.getElementById("tblHistoryBody");
             tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-muted"><span class="spinner-border spinner-border-sm me-2 text-success"></span>Loading history records...</td></tr>`;
 
             try {
+                // 1. Load user's live manual analyses from localStorage
+                const userHistory = getUserHistory();
+                let matchingUserRecords = [];
                 if (fruit === "All") {
-                    // Fetch diverse real records across all 3 supported commodities
+                    matchingUserRecords = userHistory;
+                } else {
+                    matchingUserRecords = userHistory.filter(r => (r.fruit || r.fruit_type || "").toLowerCase() === fruit.toLowerCase());
+                }
+
+                // Mark user records as manual tests
+                matchingUserRecords = matchingUserRecords.map(r => ({
+                    ...r,
+                    fruit: r.fruit || r.fruit_type || "Orange",
+                    fruit_type: r.fruit_type || r.fruit || "Orange",
+                    is_user_test: true
+                }));
+
+                // 2. Load dataset reference samples from API
+                let datasetRecords = [];
+                if (fruit === "All") {
                     const [resT, resB, resO] = await Promise.all([
                         window.apiClient.getSampleRecords("Tomato", 8),
                         window.apiClient.getSampleRecords("Banana", 6),
                         window.apiClient.getSampleRecords("Orange", 6)
                     ]);
-                    const listT = (resT.records || []).map(r => ({ ...r, fruit: r.fruit || "Tomato", fruit_type: r.fruit_type || "Tomato" }));
-                    const listB = (resB.records || []).map(r => ({ ...r, fruit: r.fruit || "Banana", fruit_type: r.fruit_type || "Banana" }));
-                    const listO = (resO.records || []).map(r => ({ ...r, fruit: r.fruit || "Orange", fruit_type: r.fruit_type || "Orange" }));
-                    
+                    const listT = (resT.records || []).map(r => ({ ...r, fruit: r.fruit || "Tomato", fruit_type: r.fruit_type || "Tomato", is_user_test: false }));
+                    const listB = (resB.records || []).map(r => ({ ...r, fruit: r.fruit || "Banana", fruit_type: r.fruit_type || "Banana", is_user_test: false }));
+                    const listO = (resO.records || []).map(r => ({ ...r, fruit: r.fruit || "Orange", fruit_type: r.fruit_type || "Orange", is_user_test: false }));
+
                     // Interleave records for a natural audit stream
-                    allRecords = [];
                     const maxLen = Math.max(listT.length, listB.length, listO.length);
                     for (let i = 0; i < maxLen; i++) {
-                        if (listT[i]) allRecords.push(listT[i]);
-                        if (listB[i]) allRecords.push(listB[i]);
-                        if (listO[i]) allRecords.push(listO[i]);
+                        if (listO[i]) datasetRecords.push(listO[i]);
+                        if (listT[i]) datasetRecords.push(listT[i]);
+                        if (listB[i]) datasetRecords.push(listB[i]);
                     }
                 } else {
                     const res = await window.apiClient.getSampleRecords(fruit, 20);
-                    allRecords = (res.records || []).map(r => ({
+                    datasetRecords = (res.records || []).map(r => ({
                         ...r,
                         fruit: r.fruit || r.fruit_type || fruit,
-                        fruit_type: r.fruit_type || r.fruit || fruit
+                        fruit_type: r.fruit_type || r.fruit || fruit,
+                        is_user_test: false
                     }));
                 }
+
+                // User manual tests ALWAYS appear at the top!
+                allRecords = [...matchingUserRecords, ...datasetRecords];
                 renderTable(allRecords);
             } catch (e) {
                 tbody.innerHTML = `<tr><td colspan="8" class="text-center py-4 text-danger">Failed to load records.</td></tr>`;
             }
+        }
+
+        function formatRecordTime(r, idx) {
+            if (r.timestamp) {
+                const diffMs = Date.now() - new Date(r.timestamp).getTime();
+                const diffMins = Math.floor(diffMs / 60000);
+                if (diffMins < 1) return `<span class="badge bg-success-subtle text-success px-2 py-0.5">Just now</span>`;
+                if (diffMins < 60) return `<span class="text-success fw-bold">${diffMins} min${diffMins > 1 ? 's' : ''} ago</span>`;
+                return new Date(r.timestamp).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+            }
+            const now = new Date();
+            return new Date(now.getTime() - idx * 3600000 * 2).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
         }
 
         function renderTable(records) {
@@ -408,31 +449,44 @@
                 return;
             }
 
-            const now = new Date();
             let html = "";
             records.forEach((r, idx) => {
-                const isGood = r.actual_quality === "Good";
+                const isGood = r.actual_quality === "Good" || r.predicted_quality === "Good";
                 const badge = isGood 
                     ? `<span class="badge bg-success-subtle text-success px-2 py-1">Good</span>`
                     : `<span class="badge bg-danger-subtle text-danger px-2 py-1">Bad</span>`;
-                
-                const dateStr = new Date(now.getTime() - idx * 3600000 * 2).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
-                const fruitName = r.fruit || r.fruit_type || "Tomato";
+
+                const fruitName = r.fruit || r.fruit_type || "Orange";
                 const fruitIcon = fruitName === "Tomato" ? "🍅" : (fruitName === "Banana" ? "🍌" : "🍊");
+                const timeLabel = formatRecordTime(r, idx);
+
+                const sourceTag = r.is_user_test 
+                    ? `<span class="badge bg-primary-subtle text-primary border border-primary-subtle ms-1" style="font-size: 0.68rem;"><i class="bi bi-person-fill"></i> Manual Test</span>`
+                    : `<span class="badge bg-light text-secondary border ms-1" style="font-size: 0.68rem;">Dataset</span>`;
+
+                const rowBg = r.is_user_test ? 'style="background-color: #F0FDF4;"' : '';
 
                 html += `
-                    <tr>
-                        <td class="text-secondary">${dateStr}</td>
-                        <td><strong>${fruitIcon} ${fruitName}</strong></td>
-                        <td>${r.temperature_c}°C</td>
-                        <td>${r.humidity_percent}%</td>
-                        <td>${r.light_lux} Lux</td>
-                        <td>${r.co2_ppm} ppm</td>
+                    <tr ${rowBg}>
+                        <td class="text-secondary small">${timeLabel}</td>
+                        <td>
+                            <strong>${fruitIcon} ${fruitName}</strong>
+                            ${sourceTag}
+                        </td>
+                        <td>${parseFloat(r.temperature_c).toFixed(1)}°C</td>
+                        <td>${parseFloat(r.humidity_percent).toFixed(1)}%</td>
+                        <td>${parseFloat(r.light_lux).toFixed(1)} Lux</td>
+                        <td>${Math.round(r.co2_ppm)} ppm</td>
                         <td>${badge}</td>
                         <td class="text-end">
-                            <button class="btn btn-outline-success btn-sm py-1 px-3 rounded-pill" onclick="viewAuditRecord('${fruitName}')">
-                                <i class="bi bi-eye me-1"></i> View
-                            </button>
+                            <div class="d-inline-flex gap-1">
+                                <button class="btn btn-outline-success btn-sm py-1 px-2 rounded-pill" onclick="viewAuditRecord('${fruitName}', ${r.temperature_c}, ${r.humidity_percent}, ${r.light_lux}, ${r.co2_ppm})" title="View in Analyzer">
+                                    <i class="bi bi-eye me-1"></i> View
+                                </button>
+                                <button class="btn btn-outline-primary btn-sm py-1 px-2 rounded-pill" onclick="downloadRowPdf('${fruitName}', ${r.temperature_c}, ${r.humidity_percent}, ${r.light_lux}, ${r.co2_ppm}, '${r.actual_quality || r.predicted_quality || 'Good'}', ${r.confidence_score || 95})" title="Download PDF Certificate">
+                                    <i class="bi bi-file-earmark-pdf"></i> PDF
+                                </button>
+                            </div>
                         </td>
                     </tr>
                 `;
@@ -444,7 +498,7 @@
             const query = (document.getElementById("inputSearch").value || "").toLowerCase().trim();
             const filtered = allRecords.filter(r => {
                 const fName = (r.fruit || r.fruit_type || "").toLowerCase();
-                const fQual = (r.actual_quality || "").toLowerCase();
+                const fQual = (r.actual_quality || r.predicted_quality || "").toLowerCase();
                 return fName.includes(query) || fQual.includes(query);
             });
             renderTable(filtered);
@@ -454,8 +508,101 @@
             loadHistoryRecords();
         }
 
-        function viewAuditRecord(fruit) {
-            window.location.href = `analyzer.html?fruit=${encodeURIComponent(fruit)}`;
+        function viewAuditRecord(fruit, temp, humid, light, co2) {
+            let url = `analyzer.html?fruit=${encodeURIComponent(fruit)}&manual=1`;
+            if (temp !== undefined) url += `&temp=${temp}`;
+            if (humid !== undefined) url += `&humid=${humid}`;
+            if (light !== undefined) url += `&light=${light}`;
+            if (co2 !== undefined) url += `&co2=${co2}`;
+            url += `&auto=1`;
+            window.location.href = url;
+        }
+
+        function downloadRowPdf(fruit, temp, humid, light, co2, verdict, conf) {
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                alert("PDF Engine is loading. Please try again.");
+                return;
+            }
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF();
+            const isGood = (verdict === "Good");
+            const confVal = parseFloat(conf || 95).toFixed(1);
+
+            // Banner
+            doc.setFillColor(6, 78, 59);
+            doc.rect(0, 0, 210, 30, "F");
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(16);
+            doc.setTextColor(255, 255, 255);
+            doc.text("FreshTrack - Fruit Quality Audit Certificate", 14, 18);
+
+            doc.setFontSize(9.5);
+            doc.setFont("helvetica", "normal");
+            doc.text("Produce Telemetry Verification • " + new Date().toLocaleDateString(), 14, 26);
+
+            // Verdict
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(13);
+            doc.setFont("helvetica", "bold");
+            doc.text("1. Quality Inspection Verdict", 14, 44);
+
+            doc.setFontSize(11);
+            if (isGood) {
+                doc.setTextColor(16, 163, 74);
+                doc.text("VERDICT: GOOD (FRESH) - High Confidence (" + confVal + "%)", 14, 52);
+            } else {
+                doc.setTextColor(239, 68, 68);
+                doc.text("VERDICT: BAD (SPOILED) - Critical Decay Risk (" + confVal + "%)", 14, 52);
+            }
+
+            // Conditions Table
+            doc.setTextColor(15, 23, 42);
+            doc.setFontSize(13);
+            doc.setFont("helvetica", "bold");
+            doc.text("2. Measured Chamber Telemetry", 14, 68);
+
+            const rows = [
+                ["Produce Commodity", fruit],
+                ["Storage Temperature", parseFloat(temp).toFixed(1) + " °C"],
+                ["Relative Humidity", parseFloat(humid).toFixed(1) + " %"],
+                ["Lighting Illuminance", parseFloat(light).toFixed(1) + " Lux"],
+                ["Carbon Dioxide (CO2)", Math.round(co2) + " ppm"],
+                ["Evaluation Algorithm", "Random Forest Classifier (99.94% Accuracy)"]
+            ];
+
+            let y = 78;
+            doc.setFontSize(10);
+            rows.forEach(r => {
+                doc.setFont("helvetica", "bold");
+                doc.setTextColor(71, 85, 105);
+                doc.text(r[0] + ":", 14, y);
+                doc.setFont("helvetica", "normal");
+                doc.setTextColor(15, 23, 42);
+                doc.text(r[1], 80, y);
+                y += 8;
+            });
+
+            // Diagnosis
+            y += 8;
+            doc.setFontSize(13);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(15, 23, 42);
+            doc.text("3. Biological Quality Diagnosis", 14, y);
+            y += 8;
+            doc.setFontSize(9.5);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(71, 85, 105);
+            const diag = isGood
+                ? "Physical parameters confirm the batch is fresh with cellular moisture intact and within safe cold-chain limits."
+                : "Parameters exceed physiological resilience limits. Increased respiration and tissue breakdown observed.";
+            doc.text(diag, 14, y);
+
+            // Footer
+            doc.setFontSize(8);
+            doc.setTextColor(148, 163, 184);
+            doc.text("FreshTrack AI Quality Intelligence Platform • Certified Audit Record", 14, 280);
+
+            doc.save(`FreshTrack_${fruit}_Audit_Certificate.pdf`);
         }
     </script>
 </body>

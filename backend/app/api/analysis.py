@@ -38,7 +38,11 @@ def get_dataset_summary() -> DatasetSummaryResponse:
             good_quality_count=good_count,
             bad_quality_count=bad_count,
             good_quality_percentage=summary["good_percentage"],
-            bad_quality_percentage=summary["bad_percentage"]
+            bad_quality_percentage=summary["bad_percentage"],
+            good_ratio=summary["good_percentage"],
+            bad_ratio=summary["bad_percentage"],
+            good_count=good_count,
+            bad_count=bad_count
         )
     except FileNotFoundError:
         raise HTTPException(status_code=503, detail="Cleaned dataset file is not available on server.")
@@ -76,6 +80,7 @@ def get_fruits_analysis() -> FruitAnalysisResponse:
         
         return FruitAnalysisResponse(
             fruits=fruit_items,
+            breakdown={fruit: {"good_ratio": item.good_percentage, "bad_ratio": item.bad_percentage, "total": item.total, "good_count": item.good_count, "bad_count": item.bad_count} for fruit, item in fruit_items.items()},
             summary=summary_text
         )
     except FileNotFoundError:
